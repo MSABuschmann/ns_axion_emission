@@ -10,7 +10,18 @@
 #include "nscool.h"
 
 int main(int argc, const char* argv[]) {
-    std::unique_ptr<NSCool> nscool = std::make_unique<NSCool>();
+    if (argc != 2) {
+        std::cout << "No EOS provided!" << std::endl;
+        return true;
+    }
+    std::string eos = argv[1];
+
+    NSCool nscool;
+    if (!nscool.LoadEos(eos)) {
+        std::cout << "Could not load EOS '" << eos << "'!\n";
+        std::cout << "Available EOSs are:\n";
+        nscool.PrintEosNames();
+    }
 
     return 0;
 }
