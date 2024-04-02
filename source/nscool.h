@@ -16,6 +16,18 @@ class NSCool {
     bool LoadEos(std::string eos);
     void PrintEosNames();
 
+    std::vector<double> GetT() const {
+        return raw_T;
+    }
+
+    std::vector<double> GetTc() const {
+        return raw_Tcn;
+    }
+
+    std::vector<double> GetEphi() const {
+        return raw_ephi;
+    }
+
   private:
     void LocateEos();
     bool LoadCriticalTemps(std::string path);

@@ -81,8 +81,9 @@ bool NSCool::LoadProfile(std::string path) {
 
     while (file) {
         std::getline(file, line);
+        std::cout << line << std::endl;
         std::vector<std::string> entries = Split(line);
-        if (entries.size() != 6) {
+        if (entries.size() != 7) {
             continue;
         }
         raw_rT.push_back(std::stod(entries[1]));
