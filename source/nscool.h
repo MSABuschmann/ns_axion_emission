@@ -16,26 +16,17 @@ class NSCool {
     bool LoadEos(std::string eos);
     void PrintEosNames();
 
-    std::vector<double> GetT() const {
-        return raw_T;
+    double GetRMax() const {
+        return std::min(raw_rTc.back(), raw_rT.back()) - 1e-10;
     }
 
-    std::vector<double> GetTc() const {
-        return raw_Tcn;
+    double GetT(double r) {
+        return lerp(raw_rT, raw_T, r);
     }
 
-    std::vector<double> GetEphi() const {
-        return raw_ephi;
+    double GetTcn(double r) {
+        return lerp(raw_rTc, raw_Tcn, r);
     }
-
-  private:
-    void LocateEos();
-    bool LoadCriticalTemps(std::string path);
-    bool LoadProfile(std::string path);
-    std::vector<std::string> Split(std::string line);
-
-    const std::string eos_parent_dir = "./eos/";
-    std::vector<std::string> eos_names;
 
     std::vector<double> raw_rTc;
     std::vector<double> raw_Tcn;
@@ -45,6 +36,16 @@ class NSCool {
     std::vector<double> raw_rT;
     std::vector<double> raw_T;
     std::vector<double> raw_ephi;
+
+  private:
+    void LocateEos();
+    bool LoadCriticalTemps(std::string path);
+    bool LoadProfile(std::string path);
+    std::vector<std::string> Split(std::string line);
+    double lerp(std::vector<double>& x, std::vector<double>& y, double nx);
+
+    const std::string eos_parent_dir = "./eos/";
+    std::vector<std::string> eos_names;
 };
 
 #endif // NSCOOL_H_

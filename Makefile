@@ -1,5 +1,5 @@
 CC = CC
-CFLAGS = -g -Wall -fopenmp -O3
+CFLAGS = -g -Wall -fopenmp -O3 -std=c++20
 LDFLAGS = -lhdf5
 
 SRC = ./source

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <cmath>
 
 #include "nscool.h"
 
@@ -40,7 +41,7 @@ bool NSCool::LoadCriticalTemps(std::string path) {
     if (!file.is_open()) {
         return false;
     }
-   
+
     std::string line;
     for (int i = 0; i < 6; ++i)
         std::getline(file, line);
@@ -59,6 +60,7 @@ bool NSCool::LoadCriticalTemps(std::string path) {
             case 13:
                 raw_rTc.push_back(std::stod(entries[1]));
                 raw_Tcn.push_back(std::stod(entries[8]));
+                raw_Tcp.push_back(0);
                 raw_state.push_back(State::SF_1s0);
                 break;
             default: continue;
@@ -74,14 +76,13 @@ bool NSCool::LoadProfile(std::string path) {
     if (!file.is_open()) {
         return false;
     }
-   
+
     std::string line;
     for (int i = 0; i < 9; ++i)
         std::getline(file, line);
 
     while (file) {
         std::getline(file, line);
-        std::cout << line << std::endl;
         std::vector<std::string> entries = Split(line);
         if (entries.size() != 7) {
             continue;
@@ -90,6 +91,14 @@ bool NSCool::LoadProfile(std::string path) {
         raw_T.push_back(std::stod(entries[5]));
         raw_ephi.push_back(std::stod(entries[3]));
     }
+
+    raw_rT.push_back(0);
+    raw_T.push_back(raw_T.back());
+    raw_ephi.push_back(raw_ephi.back());
+
+    std::reverse(raw_rT.begin(), raw_rT.end());
+    std::reverse(raw_T.begin(), raw_T.end());
+    std::reverse(raw_ephi.begin(), raw_ephi.end());
 
     return true;
 }
@@ -100,7 +109,7 @@ std::vector<std::string> NSCool::Split(std::string line) {
     std::vector<std::string> vs;
     while (getline(ss, s, ' ')) {
         if (s != "") {
-            vs.push_back(s); 
+            vs.push_back(s);
         }
     }
 
@@ -112,3 +121,12 @@ void NSCool::PrintEosNames() {
         std::cout << str << "\n";
     }
 }
+
+double NSCool::lerp(std::vector<double>& x, std::vector<double>& y, double nx) {
+    std::vector<double>::iterator it = std::upper_bound(x.begin(), x.end(), nx);
+    double t = (*it - nx)/(*it - *(it-1));
+    size_t i = std::distance(x.begin(), it);
+    return std::lerp(y[i], y[i-1], t);
+}
+
+

@@ -2,16 +2,18 @@
 
 #include "pbf_process.h"
 
+#define keV2K 11605000.
+
 std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins) {
-    const std::vector<double> T = nscool->GetT();
-    const std::vector<double> Tc = nscool->GetTc();
-    const std::vector<double> ephi = nscool->GetEphi();
+    const std::vector<double> T ;//= nscool->GetT();
+    const std::vector<double> Tc ;//= nscool->GetTc();
+    const std::vector<double> ephi ;//= nscool->GetEphi();
     const std::vector<double> DeltaT = GetDeltaT(T, Tc);
 
     std::vector<double> spectrum(E_bins.size(), 0.);
     for (unsigned int i = 0; i < E_bins.size(); ++i) {
         for (unsigned int j = 0; j < T.size(); ++j) {
-            double omega = E_bins[i] / 8.61833e-8 / ephi[j];
+            double omega = E_bins[i] * keV2K / ephi[j];
             spectrum[i] += J(omega, T[j], DeltaT[j]);
         }
     }
@@ -36,7 +38,7 @@ double PbfProcess_1s0::J(double omega, double T, double DeltaT) {
     double fermi = std::exp(omega/(2.*T))+1.;
     fermi = 1./(fermi*fermi);
 
-    return 1./(2.*DeltaT * 8.61833e-8) *
+    return keV2K/(2.*DeltaT) *
             argwt*argwt*argwt / std::sqrt(argwt*argwt-1) * fermi;
 }
 
