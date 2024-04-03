@@ -3,16 +3,20 @@ CFLAGS = -g -Wall -fopenmp -O3
 LDFLAGS = -lhdf5
 
 SRC = ./source
+BUILD_DIR = tmp_build_dir
 TARGET = ns_axion_emission
-OBS = pbf_process.o nscool.o
+OBS = pbf_process.o nscool.o ns_axion_emission.o
 
 all: $(TARGET)
 
-$(TARGET): $(SRC)/$(TARGET).cpp $(addprefix $(SRC)/,$(OBS))
+$(TARGET): $(addprefix $(BUILD_DIR)/,$(OBS))
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(SRC)/%.o: $(SRC)/%.cpp
+$(BUILD_DIR)/%.o: $(SRC)/%.cpp | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
 clean:
-	$(RM) $(TARGET) $(addprefix $(SRC)/,$(OBS))
+	$(RM) -r $(TARGET) $(BUILD_DIR)
