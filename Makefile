@@ -4,15 +4,15 @@ LDFLAGS = -lhdf5
 
 SRC = ./source
 TARGET = ns_axion_emission
-OBS = nscool
+OBS = pbf_process.o nscool.o
 
 all: $(TARGET)
 
-$(TARGET): $(SRC)/$(TARGET).cpp $(SRC)/$(OBS).o
+$(TARGET): $(SRC)/$(TARGET).cpp $(addprefix $(SRC)/,$(OBS))
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(SRC)/$(OBS).o: $(SRC)/$(OBS).cpp
+$(SRC)/%.o: $(SRC)/%.cpp
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
-	$(RM) $(TARGET) $(SRC)/*.o
+	$(RM) $(TARGET) $(addprefix $(SRC)/,$(OBS))
