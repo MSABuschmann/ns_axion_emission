@@ -5,39 +5,36 @@
 
 #include "nscool.h"
 
+template <typename T>
 void WriteDataset(hid_t file_id, const char* name,
-                  std::vector<double> dataset) {
+                  std::vector<T> dataset) {
+    // Identify datatype.
+    hid_t mem_type_id, dset_type_id;
+    if (std::is_same<T, float>::value) {
+        mem_type_id = H5T_NATIVE_FLOAT;
+        dset_type_id = H5T_IEEE_F32LE;
+    } else if (std::is_same<T, double>::value) {
+        mem_type_id = H5T_NATIVE_DOUBLE;
+        dset_type_id = H5T_IEEE_F64LE;
+    } else if (std::is_same<T, int>::value) {
+        mem_type_id = H5T_NATIVE_INT;
+        dset_type_id = H5T_IEEE_F64LE;
+    } else {
+        std::cout << "Unknown datatype, cannot write: " << name << std::endl;
+        return;
+    }
+
     hsize_t dims[1] = {dataset.size()};
     hid_t space = H5Screate_simple(1, dims, NULL);
-    hid_t dataset_id = H5Dcreate(file_id, name, H5T_IEEE_F64LE, space,
+    hid_t dataset_id = H5Dcreate(file_id, name, dset_type_id, space,
                                  H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+    H5Dwrite(dataset_id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
              &dataset[0]);
     H5Dclose(dataset_id);
+
 }
 
-std::vector<double> CreateVector(double min, double max, int N) {
-    std::vector<double> v(N);
-    for (int i = 0; i < N; ++i) {
-        v[i] = static_cast<double>(i)/(static_cast<double>(N-1)) * (max-min)
-                + min;
-    }
-    return v;
-}
-
-
-void TestInterpolation(hid_t file_id, NSCool& nscool) {
-    const int N = 1000;
-    std::vector<double> r = CreateVector(0, nscool.GetRMax(), N); 
-    std::vector<double> T(N);
-    std::vector<double> Tcn(N);
-    for (int i = 0; i < N; ++i) {
-        T[i] = nscool.GetT(r[i]);
-        Tcn[i] = nscool.GetTcn(r[i]);
-    }
-    WriteDataset(file_id, "r_interp", r);
-    WriteDataset(file_id, "T_interp", T);
-    WriteDataset(file_id, "Tcn_interp", Tcn);
-}
+extern std::vector<double> CreateVector(double min, double max, int N);
+extern void TestInterpolation(hid_t file_id, NSCool& nscool);
 
 #endif // UTILS_H_

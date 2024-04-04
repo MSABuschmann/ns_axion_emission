@@ -1,23 +1,53 @@
 #include <cmath>
+#include <numeric>
 
 #include "pbf_process.h"
+#include "utils.h"
 
 #define keV2K 11605000.
 
-std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins) {
-    const std::vector<double> T ;//= nscool->GetT();
-    const std::vector<double> Tc ;//= nscool->GetTc();
-    const std::vector<double> ephi ;//= nscool->GetEphi();
-    const std::vector<double> DeltaT = GetDeltaT(T, Tc);
+double PbfProcess::Integrand(double E, double r) {
+    double T = nscool->GetT(r);
+    double Tc = nscool->GetTcn(r);
+    double DeltaT = GetDeltaT(T, Tc);
+    if (DeltaT <= 0) {
+        return 0.;
+    }
+    double ephi = nscool->GetEphi(r);
+    double dvdr = nscool->GetDvdr(r);
+    double omega = E * keV2K / ephi;
+    return J(omega, T, DeltaT) * dvdr * ephi;
+}
 
+std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins,
+                                            int N) {
+    std::cout << "Compute spectrum with N_r = " << N << " ..." << std::endl;
+
+    double rmin=0, rmax=0;
+    if (state == SF_3p2) {
+        rmin = 0;
+        rmax = nscool->Get1s03p2Boundary();
+    } else if (state == SF_1s0) {
+        rmin = nscool->Get1s03p2Boundary();
+        rmax = nscool->GetRMax();
+    }
+    std::vector<double> r = CreateVector(rmin, rmax, N);
     std::vector<double> spectrum(E_bins.size(), 0.);
     for (unsigned int i = 0; i < E_bins.size(); ++i) {
-        for (unsigned int j = 0; j < T.size(); ++j) {
-            double omega = E_bins[i] * keV2K / ephi[j];
-            spectrum[i] += J(omega, T[j], DeltaT[j]);
+        for (int j = 0; j < N; ++j) {
+            spectrum[i] += Integrand(E_bins[i], r[j]);
         }
     }
+    Normalize(E_bins, spectrum);
     return spectrum;
+}
+
+void PbfProcess::Normalize(std::vector<double>& x, std::vector<double>& y) {
+    double sum = std::accumulate(y.begin(), y.end(), 0.);
+    double norm = 1./(sum*(x.back()-x[0]));
+    for (unsigned int i = 0; i < y.size(); ++i) {
+        y[i] *= norm;
+    }
 }
 
 std::vector<double> PbfProcess::GetDeltaT(std::vector<double> T,
@@ -38,7 +68,7 @@ double PbfProcess_1s0::J(double omega, double T, double DeltaT) {
     double fermi = std::exp(omega/(2.*T))+1.;
     fermi = 1./(fermi*fermi);
 
-    return keV2K/(2.*DeltaT) *
+    return 1./(DeltaT) *
             argwt*argwt*argwt / std::sqrt(argwt*argwt-1) * fermi;
 }
 
