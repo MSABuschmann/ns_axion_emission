@@ -5,6 +5,8 @@
 #include <vector>
 #include "hdf5.h"
 
+class PbfProcess;
+
 enum State {
     SF_3p2 = 0,
     SF_1s0 = 1
@@ -21,7 +23,7 @@ class NSCool {
     double GetRMax() const {
         return std::min(raw_rTc.back(), raw_rT.back()) - 1e-10;
     }
-    
+
     double Get1s03p2Boundary() const {
         return boundary_1s03p2;
     }
@@ -46,6 +48,9 @@ class NSCool {
         return lerp(raw_rT, raw_dvdr, r);
     }
 
+    void DetermineDeltaTInfty(PbfProcess* process);
+    std::vector<double> GetResonanceLayer(double omega);
+
   private:
     void LocateEos();
     bool LoadCriticalTemps(std::string path);
@@ -68,6 +73,8 @@ class NSCool {
     std::vector<double> raw_ephi;
     std::vector<double> raw_dvol;
     std::vector<double> raw_dvdr;
+
+    std::vector<double> raw_DeltaT_infty;
 };
 
 #endif // NSCOOL_H_

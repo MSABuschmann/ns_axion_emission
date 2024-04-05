@@ -1,6 +1,6 @@
 CC = CC
 CFLAGS = -g -Wall -fopenmp -O3 -std=c++20
-LDFLAGS = -lhdf5
+LDFLAGS = -lhdf5 -lgsl
 
 SRC = ./source
 BUILD_DIR = tmp_build_dir

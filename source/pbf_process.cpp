@@ -1,45 +1,109 @@
 #include <cmath>
 #include <numeric>
+#include <gsl/gsl_integration.h>
 
 #include "pbf_process.h"
 #include "utils.h"
 
 #define keV2K 11605000.
 
-double PbfProcess::Integrand(double E, double r) {
-    double T = nscool->GetT(r);
-    double Tc = nscool->GetTcn(r);
-    double DeltaT = GetDeltaT(T, Tc);
+double PbfProcess::Integrand(double r, double E, PbfProcess* pthis) {
+    double T = pthis->nscool->GetT(r);
+    double Tc = pthis->nscool->GetTcn(r);
+    double DeltaT = pthis->GetDeltaT(T, Tc);
     if (DeltaT <= 0) {
         return 0.;
     }
-    double ephi = nscool->GetEphi(r);
-    double dvdr = nscool->GetDvdr(r);
+    double ephi = pthis->nscool->GetEphi(r);
+    double dvdr = pthis->nscool->GetDvdr(r);
     double omega = E * keV2K / ephi;
-    return J(omega, T, DeltaT) * dvdr * ephi;
+    return pthis->J(omega, T, DeltaT) * dvdr * ephi;
+}
+
+double PbfProcess::GslIntegrand(double r, void* params) {
+    GslIntegrationParams* gsl_params =
+            static_cast<GslIntegrationParams*>(params);
+    return Integrand(r, gsl_params->E, gsl_params->pthis);
+}
+
+std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins) {
+    std::cout << "Compute spectrum with GSL ..." << std::endl;
+    double rmin=0, rmax=0;
+    GetBoundaries(&rmin, &rmax);
+    //nscool->DetermineDeltaTInfty(this);
+
+    //gsl_integration_workspace* w = gsl_integration_workspace_alloc(1000);
+    //gsl_integration_cquad_workspace* w = gsl_integration_cquad_workspace_alloc(10000);
+    gsl_integration_romberg_workspace* w = gsl_integration_romberg_alloc(19);
+    gsl_function F;
+    F.function = &PbfProcess::GslIntegrand;
+
+    std::vector<double> spectrum(E_bins.size(), 0.);
+    for (unsigned int i = 0; i < E_bins.size(); ++i) {
+        GslIntegrationParams gsl_params;
+        gsl_params.pthis = this;
+        gsl_params.E = E_bins[i];
+        F.params = &gsl_params;
+        //double error;
+        size_t neval;
+
+        /*
+        std::vector<double> resonances =
+                nscool->GetResonanceLayer(E_bins[i] * keV2K);
+        std::vector<double> pts = {rmin};
+        for (double res : resonances) {
+            if (rmin < res && res < rmax) {
+                pts.push_back(res);
+            }
+        }
+        pts.push_back(rmax);
+
+        gsl_integration_qagp(&F, &pts[0], pts.size(), 1e-2, 1e-3, 1000, w,
+                             &spectrum[i], &error);
+        */
+
+        //gsl_integration_qags(&F, rmin, rmax, 0.1, 1e-2, 1000, w, &spectrum[i],
+        //                     &error);
+
+        //gsl_integration_cquad(&F, rmin, rmax, 0, 1e-6, w, &spectrum[i],
+        //                      &error,  &neval);
+
+        //gsl_integration_cquad(&F, resonances[0]-1., rmax+20, 0, 1e-6, w,
+        //                      &spectrum[i], &error,  &neval);
+
+        gsl_integration_romberg(&F, rmin, rmax, 0, 1e-3, &spectrum[i], &neval,
+                                w);
+    }
+    Normalize(E_bins, spectrum);
+    return spectrum;
 }
 
 std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins,
                                             int N) {
     std::cout << "Compute spectrum with N_r = " << N << " ..." << std::endl;
-
     double rmin=0, rmax=0;
-    if (state == SF_3p2) {
-        rmin = 0;
-        rmax = nscool->Get1s03p2Boundary();
-    } else if (state == SF_1s0) {
-        rmin = nscool->Get1s03p2Boundary();
-        rmax = nscool->GetRMax();
-    }
+    GetBoundaries(&rmin, &rmax);
     std::vector<double> r = CreateVector(rmin, rmax, N);
+    //nscool->DetermineDeltaTInfty(this);
+
     std::vector<double> spectrum(E_bins.size(), 0.);
     for (unsigned int i = 0; i < E_bins.size(); ++i) {
         for (int j = 0; j < N; ++j) {
-            spectrum[i] += Integrand(E_bins[i], r[j]);
+            spectrum[i] += Integrand(r[j], E_bins[i], this);
         }
     }
     Normalize(E_bins, spectrum);
     return spectrum;
+}
+
+void PbfProcess::GetBoundaries(double* rmin, double* rmax) {
+    if (state == SF_3p2) {
+        (*rmin) = 0;
+        (*rmax) = nscool->Get1s03p2Boundary();
+    } else if (state == SF_1s0) {
+        (*rmin) = nscool->Get1s03p2Boundary();
+        (*rmax) = nscool->GetRMax();
+    }
 }
 
 void PbfProcess::Normalize(std::vector<double>& x, std::vector<double>& y) {
@@ -50,15 +114,6 @@ void PbfProcess::Normalize(std::vector<double>& x, std::vector<double>& y) {
     }
 }
 
-std::vector<double> PbfProcess::GetDeltaT(std::vector<double> T,
-                                          std::vector<double> Tc) {
-    std::vector<double> DeltaT(T.size(), 0.);
-    for(unsigned int i = 0; i < T.size(); ++i) {
-        DeltaT[i] = GetDeltaT(T[i], Tc[i]);
-    }
-    return DeltaT;
-}
-
 double PbfProcess_1s0::J(double omega, double T, double DeltaT) {
     double argwt = omega / (2.*DeltaT);
     if (argwt <= 1) {
@@ -67,8 +122,7 @@ double PbfProcess_1s0::J(double omega, double T, double DeltaT) {
 
     double fermi = std::exp(omega/(2.*T))+1.;
     fermi = 1./(fermi*fermi);
-
-    return 1./(DeltaT) *
+    return 1./(DeltaT)/keV2K *
             argwt*argwt*argwt / std::sqrt(argwt*argwt-1) * fermi;
 }
 

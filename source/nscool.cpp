@@ -6,6 +6,7 @@
 
 #include "utils.h"
 #include "nscool.h"
+#include "pbf_process.h"
 
 NSCool::NSCool() {
     LocateEos();
@@ -35,7 +36,7 @@ bool NSCool::LoadEos(std::string eos) {
     }
 
     Determine1s03p2Boundary();
-    
+
     std::cout << "3p2: 0m - " << Get1s03p2Boundary() << "m" << std::endl;
     std::cout << "1s0: " << Get1s03p2Boundary() << "m - " 
               << GetRMax() << "m" << std::endl;
@@ -147,6 +148,35 @@ void NSCool::Determine1s03p2Boundary() {
     size_t i = std::distance(raw_state.begin(),
                     std::lower_bound(raw_state.begin(), raw_state.end(), 1));
     boundary_1s03p2 = (raw_rTc[i] + raw_rTc[i-1])/2.;
+}
+
+void NSCool::DetermineDeltaTInfty(PbfProcess* process) {
+    raw_DeltaT_infty.clear();
+    for (size_t i = 0; i < raw_Tcn.size(); ++i) {
+        double r = raw_rTc[i];
+        double Tc = raw_Tcn[i];
+        double T = GetT(r);
+        double DeltaT = process->GetDeltaT(T, Tc);
+        double DeltaT_infty = DeltaT * GetEphi(r);
+        raw_DeltaT_infty.push_back(DeltaT_infty);
+    }
+}
+
+std::vector<double> NSCool::GetResonanceLayer(double omega) {
+    std::vector<double> res;
+    double target = omega/2.;
+    for (size_t i = 0; i < raw_DeltaT_infty.size() - 1; ++i) {
+        if ((raw_DeltaT_infty[i]-target)*(raw_DeltaT_infty[i+1]-target) <= 0) {
+            std::vector<double> x = {raw_DeltaT_infty[i],raw_DeltaT_infty[i+1]};
+            std::vector<double> y = {raw_rTc[i], raw_rTc[i+1]};
+            if (x[0] > x[1]) {
+                std::reverse(x.begin(), x.end());
+                std::reverse(y.begin(), y.end());
+            }
+            res.push_back(lerp(x, y, target));
+        }
+    }
+    return res;
 }
 
 double NSCool::lerp(std::vector<double>& x, std::vector<double>& y, double nx) {

@@ -35,7 +35,8 @@ int main(int argc, const char* argv[]) {
     WriteDataset(file_id, "1s0n_N100", pbf_1s0.GetSpectrum(E_bins, 100));
     WriteDataset(file_id, "1s0n_N1000", pbf_1s0.GetSpectrum(E_bins, 1000));
     WriteDataset(file_id, "1s0n_N10000", pbf_1s0.GetSpectrum(E_bins, 10000));
-    WriteDataset(file_id, "1s0n_N100000", pbf_1s0.GetSpectrum(E_bins, 100000));
+    WriteDataset(file_id, "1s0n_N262145", pbf_1s0.GetSpectrum(E_bins, 262145));
+    WriteDataset(file_id, "1s0n_gsl", pbf_1s0.GetSpectrum(E_bins));
     TestInterpolation(file_id, nscool);
     nscool.WriteRawData(file_id);
     H5Fclose(file_id);
