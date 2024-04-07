@@ -9,7 +9,6 @@ std::vector<double> CreateVector(double min, double max, int N) {
     return v;
 }
 
-
 void TestInterpolation(hid_t file_id, NSCool& nscool) {
     const int N = 1000;
     std::vector<double> r = CreateVector(0, nscool.GetRMax(), N);

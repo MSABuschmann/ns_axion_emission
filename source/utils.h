@@ -32,7 +32,6 @@ void WriteDataset(hid_t file_id, const char* name,
     H5Dwrite(dataset_id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
              &dataset[0]);
     H5Dclose(dataset_id);
-
 }
 
 extern std::vector<double> CreateVector(double min, double max, int N);

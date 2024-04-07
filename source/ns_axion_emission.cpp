@@ -1,14 +1,8 @@
-//#include <sstream>
-//#include <iostream>
-//#include <fstream>
-//#include <stdlib.h>
-//#include "math.h"
-//#include <omp.h>
 #include "hdf5.h"
 #include <memory>
 
 #include "nscool.h"
-#include "pbf_process.h"
+#include "1s0.h"
 #include "utils.h"
 
 int main(int argc, const char* argv[]) {
