@@ -1,11 +1,17 @@
 #include <cmath>
 #include <numeric>
 #include <gsl/gsl_integration.h>
+#include <chrono>
 
 #include "pbf_process.h"
 #include "utils.h"
 
 #define keV2K 11605000.
+#define QAGS 1
+#define QAGP 2
+#define CQUAD 3
+#define ROMBERG 4
+#define SCHEME ROMBERG
 
 double PbfProcess::Integrand(double r, double E, PbfProcess* pthis) {
     double T = pthis->nscool->GetT(r);
@@ -32,9 +38,17 @@ std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins) {
     GetBoundaries(&rmin, &rmax);
     //nscool->DetermineDeltaTInfty(this);
 
-    //gsl_integration_workspace* w = gsl_integration_workspace_alloc(1000);
-    //gsl_integration_cquad_workspace* w = gsl_integration_cquad_workspace_alloc(10000);
+#if SCHEME<CQUAD
+    gsl_integration_workspace* w = gsl_integration_workspace_alloc(1000);
+#elif SCHEME==CQUAD
+    gsl_integration_cquad_workspace* w = gsl_integration_cquad_workspace_alloc(10000);
+#elif SCHEME==ROMBERG
     gsl_integration_romberg_workspace* w = gsl_integration_romberg_alloc(19);
+#else
+    std::cout << "No apropriate integrator selected during compilation!"
+              << std::endl;
+    return NULL;
+#endif
     gsl_function F;
     F.function = &PbfProcess::GslIntegrand;
 
@@ -44,10 +58,12 @@ std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins) {
         gsl_params.pthis = this;
         gsl_params.E = E_bins[i];
         F.params = &gsl_params;
-        //double error;
-        size_t neval;
 
-        /*
+#if SCHEME==QAGS
+        double error;
+        gsl_integration_qags(&F, rmin, rmax, 0.1, 1e-2, 1000, w, &spectrum[i],
+                             &error);
+#elif SCHEME==QAPG
         std::vector<double> resonances =
                 nscool->GetResonanceLayer(E_bins[i] * keV2K);
         std::vector<double> pts = {rmin};
@@ -57,22 +73,19 @@ std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins) {
             }
         }
         pts.push_back(rmax);
-
+        double error;
         gsl_integration_qagp(&F, &pts[0], pts.size(), 1e-2, 1e-3, 1000, w,
                              &spectrum[i], &error);
-        */
-
-        //gsl_integration_qags(&F, rmin, rmax, 0.1, 1e-2, 1000, w, &spectrum[i],
-        //                     &error);
-
-        //gsl_integration_cquad(&F, rmin, rmax, 0, 1e-6, w, &spectrum[i],
-        //                      &error,  &neval);
-
-        //gsl_integration_cquad(&F, resonances[0]-1., rmax+20, 0, 1e-6, w,
-        //                      &spectrum[i], &error,  &neval);
-
+#elif SCHEME==CQUAD
+        double error;
+        size_t neval;
+        gsl_integration_cquad(&F, rmin, rmax, 0, 1e-6, w, &spectrum[i],
+                              &error,  &neval);
+#elif SCHEME==ROMBERG
+        size_t neval;
         gsl_integration_romberg(&F, rmin, rmax, 0, 1e-3, &spectrum[i], &neval,
                                 w);
+#endif
     }
     Normalize(E_bins, spectrum);
     return spectrum;
