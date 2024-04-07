@@ -2,6 +2,7 @@
 #define UTILS_H_
 
 #include "hdf5.h"
+#include <chrono>
 
 #include "nscool.h"
 
@@ -36,5 +37,6 @@ void WriteDataset(hid_t file_id, const char* name,
 
 extern std::vector<double> CreateVector(double min, double max, int N);
 extern void TestInterpolation(hid_t file_id, NSCool& nscool);
+extern void PrintDuration(std::chrono::steady_clock::time_point& start_time);
 
 #endif // UTILS_H_

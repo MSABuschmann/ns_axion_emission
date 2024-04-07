@@ -34,6 +34,8 @@ double PbfProcess::GslIntegrand(double r, void* params) {
 
 std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins) {
     std::cout << "Compute spectrum with GSL ..." << std::endl;
+    std::chrono::steady_clock::time_point start_time =
+            std::chrono::steady_clock::now();
     double rmin=0, rmax=0;
     GetBoundaries(&rmin, &rmax);
     std::vector<double> spectrum(E_bins.size(), 0.);
@@ -85,12 +87,15 @@ std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins) {
 #endif
     }
     Normalize(E_bins, spectrum);
+    PrintDuration(start_time);
     return spectrum;
 }
 
 std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins,
                                             int N) {
     std::cout << "Compute spectrum with N_r = " << N << " ..." << std::endl;
+    std::chrono::steady_clock::time_point start_time =
+            std::chrono::steady_clock::now();
     double rmin=0, rmax=0;
     GetBoundaries(&rmin, &rmax);
     std::vector<double> r = CreateVector(rmin, rmax, N);
@@ -103,6 +108,7 @@ std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins,
         }
     }
     Normalize(E_bins, spectrum);
+    PrintDuration(start_time);
     return spectrum;
 }
 

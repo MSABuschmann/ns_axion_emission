@@ -23,3 +23,13 @@ void TestInterpolation(hid_t file_id, NSCool& nscool) {
     WriteDataset(file_id, "T_interp", T);
     WriteDataset(file_id, "Tcn_interp", Tcn);
 }
+
+void PrintDuration(std::chrono::steady_clock::time_point& start_time) {
+    std::chrono::steady_clock::time_point stop_time =
+            std::chrono::steady_clock::now();
+    std::chrono::microseconds duration_micro =
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                    stop_time - start_time);
+    double duration_seconds = static_cast<double>(duration_micro.count())/1e6;
+    std::cout << "Time: " << duration_seconds << "s." << std::endl;
+}
