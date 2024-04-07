@@ -2,17 +2,17 @@
 
 #include "1s0.h"
 
-double PbfProcess_1s0::Integrand(double r, double E, PbfProcess* pthis) {
-    double T = pthis->nscool->GetT(r);
-    double Tc = pthis->nscool->GetTcn(r);
-    double DeltaT = pthis->GetDeltaT(T, Tc);
+double PbfProcess_1s0::Integrand(double r, double E) {
+    double T = nscool->GetT(r);
+    double Tc = nscool->GetTcn(r);
+    double DeltaT = GetDeltaT(T, Tc);
     if (DeltaT <= 0) {
         return 0.;
     }
-    double ephi = pthis->nscool->GetEphi(r);
-    double dvdr = pthis->nscool->GetDvdr(r);
+    double ephi = nscool->GetEphi(r);
+    double dvdr = nscool->GetDvdr(r);
     double omega = E * keV2K / ephi;
-    return pthis->J(omega, T, DeltaT) * dvdr * ephi;
+    return J(omega, T, DeltaT) * dvdr * ephi;
 }
 
 double PbfProcess_1s0::J(double omega, double T, double DeltaT) {

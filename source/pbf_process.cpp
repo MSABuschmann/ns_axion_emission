@@ -15,7 +15,7 @@
 double PbfProcess::GslIntegrand(double r, void* params) {
     GslIntegrationParams* gsl_params =
             static_cast<GslIntegrationParams*>(params);
-    return gsl_params->pthis->Integrand(r, gsl_params->E, gsl_params->pthis);
+    return gsl_params->pthis->Integrand(r, gsl_params->E);
 }
 
 std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins) {
@@ -89,7 +89,7 @@ std::vector<double> PbfProcess::GetSpectrum(std::vector<double>& E_bins,
 #pragma omp parallel for
     for (size_t i = 0; i < E_bins.size(); ++i) {
         for (int j = 0; j < N; ++j) {
-            spectrum[i] += Integrand(r[j], E_bins[i], this);
+            spectrum[i] += Integrand(r[j], E_bins[i]);
         }
     }
     Normalize(E_bins, spectrum);

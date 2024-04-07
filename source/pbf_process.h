@@ -12,8 +12,9 @@ class PbfProcess {
     std::vector<double> GetSpectrum(std::vector<double>& E_bins, int N);
     std::vector<double> GetSpectrum(std::vector<double>& E_bins);
     virtual double GetDeltaT(double T, double Tc) = 0;
-    virtual double Integrand(double r, double E, PbfProcess* pthis) = 0;
-    virtual double J(double omega, double T, double DeltaT) = 0;
+    virtual double Integrand(double r, double E) = 0;
+
+  protected:
     NSCool* nscool;
 
   private:

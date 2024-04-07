@@ -8,10 +8,10 @@ class PbfProcess_1s0: public PbfProcess {
     PbfProcess_1s0(NSCool* pnscool) : PbfProcess(pnscool, SF_1s0) {};
     using PbfProcess::PbfProcess;
     virtual double GetDeltaT(double T, double Tc) override;
-    virtual double Integrand(double r, double E, PbfProcess* pthis) override;
+    virtual double Integrand(double r, double E) override;
 
   private:
-    virtual double J(double omega, double T, double DeltaT) override;
+    double J(double omega, double T, double DeltaT);
 };
 
 #endif // PBF_1S0_H_
