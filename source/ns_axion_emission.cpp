@@ -20,15 +20,17 @@ int main(int argc, const char* argv[]) {
         nscool.PrintEosNames();
     }
 
+    double gann = 1e-10;
+    double gapp = 1e-10;
     std::vector<double> alpha = {0.5, 1., 1.5};
     std::vector<double> E = CreateVector(0., 150., 1000);
     //std::vector<double> E = {5,10,15};
 
     Pbf_1s0 pbf_1s0n(&nscool, "n");
     Pbf_1s0 pbf_1s0p(&nscool, "p");
-    Bremsstrahlung bremsstrahlung_nn(&nscool, "n");
-    Bremsstrahlung bremsstrahlung_np(&nscool, "np");
-    Bremsstrahlung bremsstrahlung_pp(&nscool, "p");
+    Bremsstrahlung bremsstrahlung_nn(&nscool, "n", gann, gapp);
+    Bremsstrahlung bremsstrahlung_np(&nscool, "np", gann, gapp);
+    Bremsstrahlung bremsstrahlung_pp(&nscool, "p", gann, gapp);
 
     // *************************************************** Write Header
     std::string filename = "output/" + eos + ".hdf5";

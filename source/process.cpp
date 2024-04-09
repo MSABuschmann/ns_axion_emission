@@ -72,7 +72,7 @@ std::vector<double> Process::GetSpectrum(std::vector<double>& E_bins) {
                                 w);
 #endif
     }
-    Normalize(E_bins, spectrum);
+//    Normalize(E_bins, spectrum);
     PrintDuration(start_time);
     return spectrum;
 }
@@ -92,7 +92,7 @@ std::vector<double> Process::GetSpectrum(std::vector<double>& E_bins,
             spectrum[i] += Integrand(r[j], E_bins[i]);
         }
     }
-    Normalize(E_bins, spectrum);
+//    Normalize(E_bins, spectrum);
     PrintDuration(start_time);
     return spectrum;
 }
