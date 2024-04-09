@@ -16,7 +16,12 @@ double Bremsstrahlung::Integrand(double r, double E) {
 }
 
 void Bremsstrahlung::GetBoundaries(double* rmin, double* rmax) {
-    (*rmin) = 0;
-    (*rmax) = nscool->GetRMax();
+    if (source == "n") {
+        (*rmin) = 0;
+        (*rmax) = nscool->GetRMax();
+    } else {
+        (*rmin) = 0;
+        (*rmax) = nscool->Get1s03p2Boundary();
+    }
 }
 

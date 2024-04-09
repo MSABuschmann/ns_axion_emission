@@ -35,6 +35,22 @@ class NSCool {
         return lerp(raw_rTc, raw_Tcp, r);
     }
 
+    double GetKfn(double r) {
+        return lerp(raw_rTc, raw_kfn, r);
+    }
+
+    double GetKfp(double r) {
+        return lerp(raw_rTc, raw_kfp, r);
+    }
+
+    double GetMstn(double r) {
+        return lerp(raw_rTc, raw_mstn, r);
+    }
+
+    double GetMstp(double r) {
+        return lerp(raw_rTc, raw_mstp, r);
+    }
+
     double GetEphi(double r) {
         return lerp(raw_rT, raw_ephi, r);
     }
@@ -67,6 +83,10 @@ class NSCool {
     std::vector<double> raw_rTc;
     std::vector<double> raw_Tcn;
     std::vector<double> raw_Tcp;
+    std::vector<double> raw_kfp;
+    std::vector<double> raw_kfn;
+    std::vector<double> raw_mstp;
+    std::vector<double> raw_mstn;
     std::vector<int> raw_state;
 
     std::vector<double> raw_rT;

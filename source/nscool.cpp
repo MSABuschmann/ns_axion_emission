@@ -60,16 +60,24 @@ bool NSCool::LoadCriticalTemps(std::string path) {
         std::vector<std::string> entries = Split(line);
 
         switch (entries.size()) {
-            case 22:
+            case 24:
                 raw_rTc.push_back(std::stod(entries[1]));
+                raw_kfp.push_back(std::stod(entries[8]));
+                raw_kfn.push_back(std::stod(entries[9]));
                 raw_Tcn.push_back(std::stod(entries[14]));
                 raw_Tcp.push_back(std::stod(entries[15]));
+                raw_mstn.push_back(std::stod(entries[22]));
+                raw_mstp.push_back(std::stod(entries[23]));
                 raw_state.push_back(0);
                 break;
-            case 13:
+            case 15:
                 raw_rTc.push_back(std::stod(entries[1]));
+                raw_kfp.push_back(0);
+                raw_kfn.push_back(std::stod(entries[7]));
                 raw_Tcn.push_back(std::stod(entries[8]));
                 raw_Tcp.push_back(0);
+                raw_mstn.push_back(std::stod(entries[13]));
+                raw_mstp.push_back(std::stod(entries[14]));
                 raw_state.push_back(1);
                 break;
             default: continue;
@@ -190,6 +198,10 @@ void NSCool::WriteRawData(hid_t file_id) {
     WriteDataset(file_id, "raw_rTc", raw_rTc);
     WriteDataset(file_id, "raw_Tcn", raw_Tcn);
     WriteDataset(file_id, "raw_Tcp", raw_Tcp);
+    WriteDataset(file_id, "raw_kfn", raw_kfn);
+    WriteDataset(file_id, "raw_kfp", raw_kfp);
+    WriteDataset(file_id, "raw_mstn", raw_mstn);
+    WriteDataset(file_id, "raw_mstp", raw_mstp);
     WriteDataset(file_id, "raw_state", raw_state);
     WriteDataset(file_id, "raw_rT", raw_rT);
     WriteDataset(file_id, "raw_T", raw_T);
