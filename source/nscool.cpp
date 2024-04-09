@@ -6,7 +6,7 @@
 
 #include "utils.h"
 #include "nscool.h"
-#include "pbf_process.h"
+#include "process.h"
 
 NSCool::NSCool() {
     LocateEos();
@@ -38,7 +38,7 @@ bool NSCool::LoadEos(std::string eos) {
     Determine1s03p2Boundary();
 
     std::cout << "3p2: 0m - " << Get1s03p2Boundary() << "m" << std::endl;
-    std::cout << "1s0: " << Get1s03p2Boundary() << "m - " 
+    std::cout << "1s0: " << Get1s03p2Boundary() << "m - "
               << GetRMax() << "m" << std::endl;
 
     return true;
@@ -64,13 +64,13 @@ bool NSCool::LoadCriticalTemps(std::string path) {
                 raw_rTc.push_back(std::stod(entries[1]));
                 raw_Tcn.push_back(std::stod(entries[14]));
                 raw_Tcp.push_back(std::stod(entries[15]));
-                raw_state.push_back(static_cast<int>(SF_3p2));
+                raw_state.push_back(0);
                 break;
             case 13:
                 raw_rTc.push_back(std::stod(entries[1]));
                 raw_Tcn.push_back(std::stod(entries[8]));
                 raw_Tcp.push_back(0);
-                raw_state.push_back(static_cast<int>(SF_1s0));
+                raw_state.push_back(1);
                 break;
             default: continue;
         }
@@ -150,7 +150,7 @@ void NSCool::Determine1s03p2Boundary() {
     boundary_1s03p2 = (raw_rTc[i] + raw_rTc[i-1])/2.;
 }
 
-void NSCool::DetermineDeltaTInfty(PbfProcess* process) {
+void NSCool::DetermineDeltaTInfty(Process* process) {
     raw_DeltaT_infty.clear();
     for (size_t i = 0; i < raw_Tcn.size(); ++i) {
         double r = raw_rTc[i];
@@ -196,4 +196,14 @@ void NSCool::WriteRawData(hid_t file_id) {
     WriteDataset(file_id, "raw_ephi", raw_ephi);
     WriteDataset(file_id, "raw_dvol", raw_dvol);
     WriteDataset(file_id, "raw_dvdr", raw_dvdr);
+}
+
+double NSCool::GetUnweightedMeanT() {
+    double res = 0;
+    for (size_t i = 0; i < raw_rTc.size(); ++i) {
+        double T = lerp(raw_rT, raw_T, raw_rTc[i]);
+        double ephi = lerp(raw_rT, raw_ephi, raw_rTc[i]);
+        res += T*ephi;
+    }
+    return res / static_cast<double>(raw_rTc.size());
 }

@@ -5,7 +5,7 @@ LDFLAGS = -lhdf5 -lgsl
 SRC = ./source
 BUILD_DIR = tmp_build_dir
 TARGET = ns_axion_emission
-OBS = utils.o pbf_process.o 1s0.o nscool.o ns_axion_emission.o
+OBS = utils.o process.o pbf_1s0.o bremsstrahlung.o nscool.o ns_axion_emission.o
 
 all: $(TARGET)
 

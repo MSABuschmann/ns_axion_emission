@@ -5,12 +5,7 @@
 #include <vector>
 #include "hdf5.h"
 
-class PbfProcess;
-
-enum State {
-    SF_3p2 = 0,
-    SF_1s0 = 1
-};
+class Process;
 
 class NSCool {
   public:
@@ -29,7 +24,7 @@ class NSCool {
     }
 
     double GetT(double r) {
-        return lerp(raw_rT, raw_T, r);
+        return lerp(raw_rT, raw_T, r) * alpha;
     }
 
     double GetTcn(double r) {
@@ -48,7 +43,12 @@ class NSCool {
         return lerp(raw_rT, raw_dvdr, r);
     }
 
-    void DetermineDeltaTInfty(PbfProcess* process);
+    void SetAlpha(double new_alpha) {
+        alpha = new_alpha;
+    }
+
+    double GetUnweightedMeanT();
+    void DetermineDeltaTInfty(Process* process);
     std::vector<double> GetResonanceLayer(double omega);
 
   private:
@@ -62,6 +62,7 @@ class NSCool {
     const std::string eos_parent_dir = "./eos/";
     std::vector<std::string> eos_names;
     double boundary_1s03p2 = 0;
+    double alpha = 1;
 
     std::vector<double> raw_rTc;
     std::vector<double> raw_Tcn;

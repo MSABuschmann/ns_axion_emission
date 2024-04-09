@@ -6,10 +6,11 @@
 
 #include "nscool.h"
 
+#define keV2K 11605000.
+
 template <typename T>
-void WriteDataset(hid_t file_id, const char* name,
+void WriteDataset(hid_t file_id, std::string name,
                   std::vector<T> dataset) {
-    // Identify datatype.
     hid_t mem_type_id, dset_type_id;
     if (std::is_same<T, float>::value) {
         mem_type_id = H5T_NATIVE_FLOAT;
@@ -27,7 +28,7 @@ void WriteDataset(hid_t file_id, const char* name,
 
     hsize_t dims[1] = {dataset.size()};
     hid_t space = H5Screate_simple(1, dims, NULL);
-    hid_t dataset_id = H5Dcreate(file_id, name, dset_type_id, space,
+    hid_t dataset_id = H5Dcreate(file_id, name.c_str(), dset_type_id, space,
                                  H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5Dwrite(dataset_id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
              &dataset[0]);
@@ -36,6 +37,7 @@ void WriteDataset(hid_t file_id, const char* name,
 
 extern std::vector<double> CreateVector(double min, double max, int N);
 extern void TestInterpolation(hid_t file_id, NSCool& nscool);
+extern void WriteIntegrand(hid_t file_id, NSCool& nscool);
 extern void PrintDuration(std::chrono::steady_clock::time_point& start_time);
 
 #endif // UTILS_H_
