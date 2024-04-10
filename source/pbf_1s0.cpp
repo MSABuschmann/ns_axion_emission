@@ -23,28 +23,62 @@ double Pbf_1s0::Integrand(double r, double E) {
     double ephi = nscool->GetEphi(r);
     double dvdr = nscool->GetDvdr(r);
     double omega = E * keV2K / ephi;
-    return J(omega, T, DeltaT) * dvdr * ephi;
+    const double I = Ias(T, DeltaT);
+    return J(omega, T, DeltaT, I) * Epsilon(r, T, DeltaT, I) * dvdr * ephi;
 }
 
-double Pbf_1s0::J(double omega, double T, double DeltaT) {
-    double argwt = omega / (2.*DeltaT);
+double Pbf_1s0::Epsilon(double r, double T, double DeltaT, double I) {
+    const double kfn = nscool->GetKfn(r);
+    const double kfp = nscool->GetKfp(r);
+    const double mstn = nscool->GetMstn(r);
+    const double mstp = nscool->GetMstp(r);
+    const double T8 = T / 1e8;
+    const double gaNN10 = gaNN * 1e10;
+    const double kfn168 = kfn / 1.68;
+    const double kfp168 = kfp / 1.68;
+    const double gamma = 1 / (1. + mstn * (kfn / 1.68) / 3.);
+
+    double epsilon = 0;
+    if (source == "n") {
+        epsilon = 4.692e12 * gaNN10 * gaNN10 * kfn168 * kfn168 * kfn168 * T8 *
+                  T8 * T8 * T8 * T8 / mstn * gamma * gamma * (I / 0.022);
+    } else if (source == "p") {
+        epsilon = 4.711e12 * gaNN10 * gaNN10 * kfp168 * kfp168 * kfp168 * T8 *
+                  T8 * T8 * T8 * T8 / mstp * gamma * gamma * (I / 0.022);
+    }
+    return epsilon;
+}
+
+inline double Pbf_1s0::Ias(double T, double DeltaT) {
+    double z = DeltaT / T;
+    return (0.158151 * z * z + 0.543166 * z * z * z * z) *
+           std::sqrt(1. + 2.66210221809 * z) *
+           std::exp(0.0535359 - std::sqrt(4 * z * z + 0.00286609258));
+}
+
+inline double Pbf_1s0::J(double omega, double T, double DeltaT, double I) {
+    double argwt = omega / (2. * DeltaT);
     if (argwt <= 1) {
         return 0;
     }
 
-    double fermi = std::exp(omega/(2.*T))+1.;
-    fermi = 1./(fermi*fermi);
-    return 1./(DeltaT)/keV2K *
-            argwt*argwt*argwt / std::sqrt(argwt*argwt-1) * fermi;
+    double z = T / DeltaT;
+    double N = z * z * z * z * z / I;
+
+    double fermi = std::exp(omega / (2. * T)) + 1.;
+    fermi = 1. / (fermi * fermi);
+    return N / (DeltaT) / keV2K * argwt * argwt * argwt /
+           std::sqrt(argwt * argwt - 1) * fermi;
 }
 
 double Pbf_1s0::GetDeltaT(double T, double Tc) {
-    double tau = T/Tc;
-    return tau >=1 ? 0. : T * std::sqrt(1.-tau)*(
-                            1.456 - 0.157/std::sqrt(tau) + 1.764/tau);
+    double tau = T / Tc;
+    return tau >= 1 ? 0.
+                    : T * std::sqrt(1. - tau) *
+                          (1.456 - 0.157 / std::sqrt(tau) + 1.764 / tau);
 }
 
-void Pbf_1s0::GetBoundaries(double* rmin, double* rmax) {
+void Pbf_1s0::GetBoundaries(double *rmin, double *rmax) {
     if (source == "p") {
         (*rmin) = 0;
         (*rmax) = nscool->Get1s03p2Boundary();

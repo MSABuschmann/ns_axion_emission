@@ -3,20 +3,24 @@
 
 #include "process.h"
 
-class Pbf_1s0: public Process {
+class Pbf_1s0 : public Process {
   public:
-    Pbf_1s0(NSCool* pnscool, std::string nucleon)
-        : Process(pnscool), source{nucleon} {};
+    Pbf_1s0(NSCool *pnscool, std::string nucleon, double this_gaNN)
+        : Process(pnscool), source{nucleon}, gaNN{this_gaNN} {};
     using Process::Process;
     virtual double GetDeltaT(double T, double Tc) override;
     virtual double Integrand(double r, double E) override;
 
   protected:
-    virtual void GetBoundaries(double* rmin, double* rmax) override;
+    virtual void GetBoundaries(double *rmin, double *rmax) override;
 
   private:
+    double J(double omega, double T, double DeltaT, double I);
+    double Epsilon(double r, double T, double DeltaT, double I);
+    double Ias(double T, double DeltaT);
+
     std::string source;
-    double J(double omega, double T, double DeltaT);
+    double gaNN;
 };
 
 #endif // PBF_1S0_H_

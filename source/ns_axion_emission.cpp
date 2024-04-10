@@ -1,12 +1,12 @@
 #include "hdf5.h"
 #include <memory>
 
+#include "bremsstrahlung.h"
 #include "nscool.h"
 #include "pbf_1s0.h"
-#include "bremsstrahlung.h"
 #include "utils.h"
 
-int main(int argc, const char* argv[]) {
+int main(int argc, const char *argv[]) {
     if (argc != 2) {
         std::cout << "No EOS provided!" << std::endl;
         return true;
@@ -24,21 +24,20 @@ int main(int argc, const char* argv[]) {
     double gapp = 1e-10;
     std::vector<double> alpha = {0.5, 1., 1.5};
     std::vector<double> E = CreateVector(0., 150., 1000);
-    //std::vector<double> E = {5,10,15};
+    // std::vector<double> E = {5,10,15};
 
-    Pbf_1s0 pbf_1s0n(&nscool, "n");
-    Pbf_1s0 pbf_1s0p(&nscool, "p");
-    Bremsstrahlung bremsstrahlung_nn(&nscool, "n", gann, gapp);
+    Pbf_1s0 pbf_1s0n(&nscool, "n", gann);
+    Pbf_1s0 pbf_1s0p(&nscool, "p", gapp);
+    Bremsstrahlung bremsstrahlung_nn(&nscool, "nn", gann, gann);
     Bremsstrahlung bremsstrahlung_np(&nscool, "np", gann, gapp);
-    Bremsstrahlung bremsstrahlung_pp(&nscool, "p", gann, gapp);
+    Bremsstrahlung bremsstrahlung_pp(&nscool, "pp", gapp, gapp);
 
     // *************************************************** Write Header
     std::string filename = "output/" + eos + ".hdf5";
-    hid_t file_id = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
-                            H5P_DEFAULT);
-    std::vector<double> params  = {nscool.Get1s03p2Boundary(),
-                                   nscool.GetRMax(),
-                                   nscool.GetUnweightedMeanT()};
+    hid_t file_id =
+        H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    std::vector<double> params = {nscool.Get1s03p2Boundary(), nscool.GetRMax(),
+                                  nscool.GetUnweightedMeanT()};
     WriteDataset(file_id, "E", E);
     WriteDataset(file_id, "alpha", alpha);
     WriteDataset(file_id, "params", params);
@@ -55,11 +54,16 @@ int main(int argc, const char* argv[]) {
     // *************************************************** Write Spectra
     for (size_t i = 0; i < alpha.size(); ++i) {
         nscool.SetAlpha(alpha[i]);
-        WriteDataset(file_id, "1s0n_a"+std::to_string(i), pbf_1s0n.GetSpectrum(E));
-        WriteDataset(file_id, "1s0p_a"+std::to_string(i), pbf_1s0p.GetSpectrum(E));
-        WriteDataset(file_id, "bremsstrahlung_nn_a"+std::to_string(i), bremsstrahlung_nn.GetSpectrum(E));
-        WriteDataset(file_id, "bremsstrahlung_np_a"+std::to_string(i), bremsstrahlung_np.GetSpectrum(E));
-        WriteDataset(file_id, "bremsstrahlung_pp_a"+std::to_string(i), bremsstrahlung_pp.GetSpectrum(E));
+        WriteDataset(file_id, "1s0n_a" + std::to_string(i),
+                     pbf_1s0n.GetSpectrum(E));
+        WriteDataset(file_id, "1s0p_a" + std::to_string(i),
+                     pbf_1s0p.GetSpectrum(E));
+        WriteDataset(file_id, "bremsstrahlung_nn_a" + std::to_string(i),
+                     bremsstrahlung_nn.GetSpectrum(E));
+        WriteDataset(file_id, "bremsstrahlung_np_a" + std::to_string(i),
+                     bremsstrahlung_np.GetSpectrum(E));
+        WriteDataset(file_id, "bremsstrahlung_pp_a" + std::to_string(i),
+                     bremsstrahlung_pp.GetSpectrum(E));
     }
 
     H5Fclose(file_id);
