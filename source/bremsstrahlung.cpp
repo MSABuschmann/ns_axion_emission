@@ -115,7 +115,7 @@ inline double Bremsstrahlung::Rnn(double T, double Tc) {
     // Eq.(59) of D. G. Yakovlev  et al, Astronomy and Astrophysics 297,
     // 717 (1995).
     const double a =
-        0.1747 + std::sqrt(0.8253 * 0.8253 + 0.07933 * 0.7933 * v * v);
+        0.1747 + std::sqrt(0.8253 * 0.8253 + 0.07933 * 0.07933 * v * v);
     const double b =
         0.7333 + std::sqrt(0.2667 * 0.2667 + 0.1678 * 0.1678 * v * v);
     const double e = 4.228 - std::sqrt(4.228 * 4.228 + 4. * v * v);
