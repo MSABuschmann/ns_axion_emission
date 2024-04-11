@@ -36,6 +36,7 @@ inline double Bremsstrahlung::Epsilon(double r, double T) {
     // Eq.(S6) of M. Buschmann et al, Phys. Rev. Lett. 128 (2022) 091102
     // [2111.09892]
     const double gamma = 1 / (1. + mstn * (kfn / 1.68) / 3.);
+
     const double T8 = T / 1e8;
     const double gann10 = gann * 1e10;
     const double gapp10 = gapp * 1e10;
@@ -54,6 +55,7 @@ inline double Bremsstrahlung::Epsilon(double r, double T) {
         0.5 * (Fp + Fplus + Fminus + xp / xn * (Fplus - Fminus)) + Gp;
     const double geff10 = std::sqrt((gapp10 + gann10) * (gapp10 + gann10) * Cg +
                                     (gapp10 - gann10) * (gapp10 - gann10) * Ch);
+
     const double rnn = Rnn(T, Tcn);
     const double rnp = Rnp(T, Tcn, Tcp);
     const double rpp = Rpp(T, Tcn);

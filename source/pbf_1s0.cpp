@@ -24,10 +24,10 @@ double Pbf_1s0::Integrand(double r, double E) {
     double dvdr = nscool->GetDvdr(r);
     double omega = E * keV2K / ephi;
     const double I = Ias(T, DeltaT);
-    return J(omega, T, DeltaT, I) * Epsilon(r, T, DeltaT, I) * dvdr * ephi;
+    return J(omega, T, DeltaT, I) * Epsilon(r, T, I) * dvdr * ephi;
 }
 
-double Pbf_1s0::Epsilon(double r, double T, double DeltaT, double I) {
+double Pbf_1s0::Epsilon(double r, double T, double I) {
     const double kfn = nscool->GetKfn(r);
     const double kfp = nscool->GetKfp(r);
     const double mstn = nscool->GetMstn(r);
@@ -36,13 +36,19 @@ double Pbf_1s0::Epsilon(double r, double T, double DeltaT, double I) {
     const double gaNN10 = gaNN * 1e10;
     const double kfn168 = kfn / 1.68;
     const double kfp168 = kfp / 1.68;
-    const double gamma = 1 / (1. + mstn * (kfn / 1.68) / 3.);
+    // Eq.(S6) of M. Buschmann et al, Phys. Rev. Lett. 128 (2022) 091102
+    // [2111.09892]
+    const double gamma = 1 / (1. + mstn * kfn168 / 3.);
 
     double epsilon = 0;
     if (source == "n") {
+        // Eq.(S7) of M. Buschmann et al, Phys. Rev. Lett. 128 (2022) 091102
+        // [2111.09892]
         epsilon = 4.692e12 * gaNN10 * gaNN10 * kfn168 * kfn168 * kfn168 * T8 *
                   T8 * T8 * T8 * T8 / mstn * gamma * gamma * (I / 0.022);
     } else if (source == "p") {
+        // Eq.(S8) of M. Buschmann et al, Phys. Rev. Lett. 128 (2022) 091102
+        // [2111.09892]
         epsilon = 4.711e12 * gaNN10 * gaNN10 * kfp168 * kfp168 * kfp168 * T8 *
                   T8 * T8 * T8 * T8 / mstp * gamma * gamma * (I / 0.022);
     }
@@ -51,9 +57,13 @@ double Pbf_1s0::Epsilon(double r, double T, double DeltaT, double I) {
 
 inline double Pbf_1s0::Ias(double T, double DeltaT) {
     double z = DeltaT / T;
-    return (0.158151 * z * z + 0.543166 * z * z * z * z) *
-           std::sqrt(1. + 2.66210221809 * z) *
-           std::exp(0.0535359 - std::sqrt(4 * z * z + 0.00286609258));
+    // Eq.(22) of A. Sedrakian, Phys. Rev. D93, 065044 (2016), arXiv:1512.07828
+    const double a = 0.158151;
+    const double c = 0.543166;
+    const double h = 0.0535359;
+    const double f = M_PI / (4. * c * c);
+    return (a * z * z + c * z * z * z * z) * std::sqrt(1 + f * z) *
+           std::exp(h - std::sqrt(4. * z * z + h * h));
 }
 
 inline double Pbf_1s0::J(double omega, double T, double DeltaT, double I) {
@@ -61,21 +71,25 @@ inline double Pbf_1s0::J(double omega, double T, double DeltaT, double I) {
     if (argwt <= 1) {
         return 0;
     }
-
     double z = T / DeltaT;
-    double N = z * z * z * z * z / I;
 
+    // Eq.(S4) of M. Buschmann et al, Phys. Rev. Lett. 126, 021102 (2021),
+    // arXiv:1910.04164
+    double N = z * z * z * z * z / I;
     double fermi = std::exp(omega / (2. * T)) + 1.;
     fermi = 1. / (fermi * fermi);
-    return N / (DeltaT) / keV2K * argwt * argwt * argwt /
+    return N / (2. * DeltaT) * argwt * argwt * argwt /
            std::sqrt(argwt * argwt - 1) * fermi;
 }
 
 double Pbf_1s0::GetDeltaT(double T, double Tc) {
-    double tau = T / Tc;
-    return tau >= 1 ? 0.
-                    : T * std::sqrt(1. - tau) *
-                          (1.456 - 0.157 / std::sqrt(tau) + 1.764 / tau);
+    const double tau = T / Tc;
+    if (tau >= 1) {
+        return 0;
+    }
+    // Eq.(23) of D. G. Yakovlev et al, Astronomy and Astrophysics 297,
+    // 717 (1995).
+    return std::sqrt(1. - tau) * (1.456 - 0.157 / std::sqrt(tau) + 1.764 / tau);
 }
 
 void Pbf_1s0::GetBoundaries(double *rmin, double *rmax) {

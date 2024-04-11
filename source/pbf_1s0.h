@@ -16,7 +16,7 @@ class Pbf_1s0 : public Process {
 
   private:
     double J(double omega, double T, double DeltaT, double I);
-    double Epsilon(double r, double T, double DeltaT, double I);
+    double Epsilon(double r, double T, double I);
     double Ias(double T, double DeltaT);
 
     std::string source;
