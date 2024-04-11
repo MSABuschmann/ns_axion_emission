@@ -10,9 +10,14 @@ class Bremsstrahlung : public Process {
         : Process(pnscool), source{nucleon}, gann{this_gann},
           gapp{this_gapp} {};
     using Process::Process;
-    virtual double GetDeltaT(double T, double Tc) override { return 0; };
+
+    virtual double GetDeltaT(double T, double Tc) override {
+        return T * DeltaT0(T, Tc);
+    };
+
     virtual double Integrand(double r, double E) override;
 
+    double DeltaT0(double T, double Tc);
     double Rnn(double T, double Tc);
     double Rnp(double T, double Tcn, double Tcp);
     double Rnp(double T, double Tc);
