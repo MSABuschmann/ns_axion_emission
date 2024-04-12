@@ -29,7 +29,7 @@ class Bremsstrahlung : public Process {
   private:
     double F(double x);
     double G(double x);
-    double J(double r, double omega, double T);
+    double J(double omega, double T);
     double Epsilon(double r, double T);
 
     std::string source;

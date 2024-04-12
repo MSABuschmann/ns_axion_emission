@@ -12,10 +12,13 @@
 #define ROMBERG 4
 #define SCHEME ROMBERG
 
+// Rescaling can help numerical stability
+#define FUDGE 1e26
+
 double Process::GslIntegrand(double r, void *params) {
     GslIntegrationParams *gsl_params =
         static_cast<GslIntegrationParams *>(params);
-    return gsl_params->pthis->Integrand(r, gsl_params->E);
+    return gsl_params->pthis->Integrand(r, gsl_params->E) / FUDGE;
 }
 
 std::vector<double> Process::GetSpectrum(std::vector<double> &E_bins) {
@@ -67,12 +70,15 @@ std::vector<double> Process::GetSpectrum(std::vector<double> &E_bins) {
 #elif SCHEME == ROMBERG
         size_t neval;
         gsl_integration_romberg_workspace *w =
-            gsl_integration_romberg_alloc(19);
+            gsl_integration_romberg_alloc(24);
         gsl_integration_romberg(&F, rmin, rmax, 0, 1e-3, &spectrum[i], &neval,
                                 w);
 #endif
     }
     PrintDuration(start_time);
+    for (size_t i = 0; i < spectrum.size(); ++i) {
+        spectrum[i] *= FUDGE;
+    }
     return spectrum;
 }
 

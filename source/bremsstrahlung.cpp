@@ -11,14 +11,17 @@ double Bremsstrahlung::Integrand(double r, double E) {
     const double dvdr = nscool->GetDvdr(r);
     const double ephi = nscool->GetEphi(r);
     const double omega = E * keV2K / ephi;
-    return J(r, omega, T) * Epsilon(r, T) * dvdr * ephi;
+    // Internally, everything is consistently in metres and Kelvin, only the
+    // input 'E' is in keV. The 1e-4 * keV2K factor is to convert the final
+    // result from erg/(m^3 K sec) to erg/(cm^3 keV sec).
+    return J(omega, T) * Epsilon(r, T) * dvdr * ephi * ephi * 1e-6 * keV2K;
 }
 
-inline double Bremsstrahlung::J(double r, double omega, double T) {
+inline double Bremsstrahlung::J(double omega, double T) {
     const double z = omega / T;
     const double N = 315. / (124 * M_PI * M_PI * M_PI * M_PI * M_PI * M_PI);
     //  Eq.(4.3b) of N. Iwamoto, Phys. Rev. D64, 043002 (2001) with z = y_5.
-    return N * z * z * z * (z * z + 4. * M_PI) / (std::exp(z) - 1.);
+    return N * z * z * z * (z * z + 4. * M_PI * M_PI) / (std::exp(z) - 1.) / T;
 }
 
 inline double Bremsstrahlung::Epsilon(double r, double T) {
@@ -58,29 +61,32 @@ inline double Bremsstrahlung::Epsilon(double r, double T) {
 
     const double rnn = Rnn(T, Tcn);
     const double rnp = Rnp(T, Tcn, Tcp);
-    const double rpp = Rpp(T, Tcn);
+    const double rpp = Rpp(T, Tcp);
 
     double epsilon = 0;
     if (source == "nn") {
         // Eq.(S1) of M. Buschmann et al, Phys. Rev. Lett. 128 (2022) 091102
         // [2111.09892]
-        epsilon = 7.373e11 * gann10 * gann10 * (Fn / 0.601566) * (kfn / 1.68) *
-                  T8 * T8 * T8 * T8 * T8 * T8 * (beta_nn / 0.56) *
-                  (gamma_nn / 0.838) * gamma * gamma * gamma * gamma * gamma *
-                  gamma * rnn;
+        // Internally everything is consistently in metres not centimetres.
+        epsilon = (7.373e11 * 1e6) * gann10 * gann10 * (Fn / 0.601566) *
+                  (kfn / 1.68) * T8 * T8 * T8 * T8 * T8 * T8 *
+                  (beta_nn / 0.56) * (gamma_nn / 0.838) * gamma * gamma *
+                  gamma * gamma * gamma * gamma * rnn;
     } else if (source == "np") {
         // Eq.(S3) of M. Buschmann et al, Phys. Rev. Lett. 128 (2022) 091102
         // [2111.09892]
-        epsilon = 9.617e11 * geff10 * geff10 * (kfp / 1.68) * T8 * T8 * T8 *
-                  T8 * T8 * T8 * (beta_np / 0.56) * (gamma_np / 0.838) * gamma *
-                  gamma * gamma * gamma * gamma * gamma * rnp;
+        // Internally everything is consistently in metres not centimetres.
+        epsilon = (9.617e11 * 1e6) * geff10 * geff10 * (kfp / 1.68) * T8 * T8 *
+                  T8 * T8 * T8 * T8 * (beta_np / 0.56) * (gamma_np / 0.838) *
+                  gamma * gamma * gamma * gamma * gamma * gamma * rnp;
     } else if (source == "pp") {
         // Eq.(S2) of M. Buschmann et al, Phys. Rev. Lett. 128 (2022) 091102
         // [2111.09892]
-        epsilon = 9.191e11 * gapp10 * gapp10 * (Fp / 0.601566) * (kfp / 1.68) *
-                  T8 * T8 * T8 * T8 * T8 * T8 * (beta_pp / 0.56) *
-                  (gamma_pp / 0.838) * gamma * gamma * gamma * gamma * gamma *
-                  gamma * rpp;
+        // Internally everything is consistently in metres not centimetres.
+        epsilon = (9.191e11 * 1e6) * gapp10 * gapp10 * (Fp / 0.601566) *
+                  (kfp / 1.68) * T8 * T8 * T8 * T8 * T8 * T8 *
+                  (beta_pp / 0.56) * (gamma_pp / 0.838) * gamma * gamma *
+                  gamma * gamma * gamma * gamma * rpp;
     }
     return epsilon;
 }
@@ -104,11 +110,12 @@ double Bremsstrahlung::DeltaT0(double T, double Tc) {
     }
     // Eq.(23) of D. G. Yakovlev  et al, Astronomy and Astrophysics 297,
     // 717 (1995).
-    return std::sqrt(1. - tau) * (1.456 - 0.157 / std::sqrt(tau) + 1.764 / tau);
+    return T * std::sqrt(1. - tau) *
+           (1.456 - 0.157 / std::sqrt(tau) + 1.764 / tau);
 }
 
-inline double Bremsstrahlung::Rnn(double T, double Tc) {
-    const double v = DeltaT0(T, Tc);
+double Bremsstrahlung::Rnn(double T, double Tc) {
+    const double v = DeltaT0(T, Tc) / T;
     if (v <= 0) {
         return 1;
     }
@@ -123,14 +130,14 @@ inline double Bremsstrahlung::Rnn(double T, double Tc) {
     return 0.5 * (a * a * std::exp(e) + std::pow(b, 7.5) * std::exp(f));
 }
 
-inline double Bremsstrahlung::Rpp(double T, double Tc) { return Rnn(T, Tc); }
+double Bremsstrahlung::Rpp(double T, double Tc) { return Rnn(T, Tc); }
 
-inline double Bremsstrahlung::Rnp(double T, double Tcn, double Tcp) {
+double Bremsstrahlung::Rnp(double T, double Tcn, double Tcp) {
     return std::min(Rnp(T, Tcn), Rnp(T, Tcp));
 }
 
-inline double Bremsstrahlung::Rnp(double T, double Tc) {
-    const double v = DeltaT0(T, Tc);
+double Bremsstrahlung::Rnp(double T, double Tc) {
+    const double v = DeltaT0(T, Tc) / T;
     if (v <= 0) {
         return 1;
     }

@@ -24,7 +24,11 @@ double Pbf_1s0::Integrand(double r, double E) {
     double dvdr = nscool->GetDvdr(r);
     double omega = E * keV2K / ephi;
     const double I = Ias(T, DeltaT);
-    return J(omega, T, DeltaT, I) * Epsilon(r, T, I) * dvdr * ephi;
+    // Internally, everything is consistently in metres and Kelvin, only the
+    // input 'E' is in keV. The 1e-4 * keV2K factor is to convert the final
+    // result from erg/(m^3 K sec) to erg/(cm^3 keV sec).
+    return J(omega, T, DeltaT, I) * Epsilon(r, T, I) * dvdr * ephi * ephi *
+           1e-6 * keV2K;
 }
 
 double Pbf_1s0::Epsilon(double r, double T, double I) {
@@ -44,13 +48,17 @@ double Pbf_1s0::Epsilon(double r, double T, double I) {
     if (source == "n") {
         // Eq.(S7) of M. Buschmann et al, Phys. Rev. Lett. 128 (2022) 091102
         // [2111.09892]
-        epsilon = 4.692e12 * gaNN10 * gaNN10 * kfn168 * kfn168 * kfn168 * T8 *
-                  T8 * T8 * T8 * T8 / mstn * gamma * gamma * (I / 0.022);
+        // Internally everything is consistently in metres not centimetres.
+        epsilon = (4.692e12 * 1e6) * gaNN10 * gaNN10 * kfn168 * kfn168 *
+                  kfn168 * T8 * T8 * T8 * T8 * T8 / mstn * gamma * gamma *
+                  (I / 0.022);
     } else if (source == "p") {
         // Eq.(S8) of M. Buschmann et al, Phys. Rev. Lett. 128 (2022) 091102
         // [2111.09892]
-        epsilon = 4.711e12 * gaNN10 * gaNN10 * kfp168 * kfp168 * kfp168 * T8 *
-                  T8 * T8 * T8 * T8 / mstp * gamma * gamma * (I / 0.022);
+        // Internally everything is consistently in metres not centimetres.
+        epsilon = (4.711e12 * 1e6) * gaNN10 * gaNN10 * kfp168 * kfp168 *
+                  kfp168 * T8 * T8 * T8 * T8 * T8 / mstp * gamma * gamma *
+                  (I / 0.022);
     }
     return epsilon;
 }
@@ -71,16 +79,17 @@ inline double Pbf_1s0::J(double omega, double T, double DeltaT, double I) {
     if (argwt <= 1) {
         return 0;
     }
-    double z = T / DeltaT;
+    double z = DeltaT / T;
 
     // Eq.(S4) of M. Buschmann et al, Phys. Rev. Lett. 126, 021102 (2021),
     // arXiv:1910.04164
     double N = z * z * z * z * z / I;
-    double fermi = std::exp(omega / (2. * T)) + 1.;
-    fermi = 1. / (fermi * fermi);
+    double fermi = Fermi(omega / (2. * T));
     return N / (2. * DeltaT) * argwt * argwt * argwt /
-           std::sqrt(argwt * argwt - 1) * fermi;
+           std::sqrt(argwt * argwt - 1) * fermi * fermi;
 }
+
+double Pbf_1s0::Fermi(double x) { return 1. / (std::exp(x) + 1); }
 
 double Pbf_1s0::GetDeltaT(double T, double Tc) {
     const double tau = T / Tc;
@@ -89,7 +98,8 @@ double Pbf_1s0::GetDeltaT(double T, double Tc) {
     }
     // Eq.(23) of D. G. Yakovlev et al, Astronomy and Astrophysics 297,
     // 717 (1995).
-    return std::sqrt(1. - tau) * (1.456 - 0.157 / std::sqrt(tau) + 1.764 / tau);
+    return T * std::sqrt(1. - tau) *
+           (1.456 - 0.157 / std::sqrt(tau) + 1.764 / tau);
 }
 
 void Pbf_1s0::GetBoundaries(double *rmin, double *rmax) {

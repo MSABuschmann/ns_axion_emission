@@ -1,19 +1,18 @@
-#include <filesystem>
 #include <algorithm>
+#include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <cmath>
 
-#include "utils.h"
 #include "nscool.h"
 #include "process.h"
+#include "utils.h"
 
-NSCool::NSCool() {
-    LocateEos();
-}
+NSCool::NSCool() { LocateEos(); }
 
 void NSCool::LocateEos() {
-    for (const auto& dir: std::filesystem::directory_iterator(eos_parent_dir)) {
+    for (const auto &dir :
+         std::filesystem::directory_iterator(eos_parent_dir)) {
         std::string dir_path = dir.path();
         dir_path.erase(0, eos_parent_dir.length());
         eos_names.push_back(dir_path);
@@ -22,8 +21,9 @@ void NSCool::LocateEos() {
 
 bool NSCool::LoadEos(std::string eos) {
     std::string eos_path = eos_parent_dir + eos;
-    if (std::any_of(eos_names.begin(), eos_names.end(), [eos](std::string name)
-        { return eos == name; })) {} else {
+    if (std::any_of(eos_names.begin(), eos_names.end(),
+                    [eos](std::string name) { return eos == name; })) {
+    } else {
         return false;
     }
 
@@ -38,15 +38,15 @@ bool NSCool::LoadEos(std::string eos) {
     Determine1s03p2Boundary();
 
     std::cout << "3p2: 0m - " << Get1s03p2Boundary() << "m" << std::endl;
-    std::cout << "1s0: " << Get1s03p2Boundary() << "m - "
-              << GetRMax() << "m" << std::endl;
+    std::cout << "1s0: " << Get1s03p2Boundary() << "m - " << GetRMax() << "m"
+              << std::endl;
 
     return true;
 }
 
 bool NSCool::LoadCriticalTemps(std::string path) {
     std::ifstream file;
-    file.open(path+"/Star_Try.dat");
+    file.open(path + "/Star_Try.dat");
     if (!file.is_open()) {
         return false;
     }
@@ -60,27 +60,28 @@ bool NSCool::LoadCriticalTemps(std::string path) {
         std::vector<std::string> entries = Split(line);
 
         switch (entries.size()) {
-            case 24:
-                raw_rTc.push_back(std::stod(entries[1]));
-                raw_kfp.push_back(std::stod(entries[8]));
-                raw_kfn.push_back(std::stod(entries[9]));
-                raw_Tcn.push_back(std::stod(entries[14]));
-                raw_Tcp.push_back(std::stod(entries[15]));
-                raw_mstn.push_back(std::stod(entries[22]));
-                raw_mstp.push_back(std::stod(entries[23]));
-                raw_state.push_back(0);
-                break;
-            case 15:
-                raw_rTc.push_back(std::stod(entries[1]));
-                raw_kfp.push_back(0);
-                raw_kfn.push_back(std::stod(entries[7]));
-                raw_Tcn.push_back(std::stod(entries[8]));
-                raw_Tcp.push_back(0);
-                raw_mstn.push_back(std::stod(entries[13]));
-                raw_mstp.push_back(std::stod(entries[14]));
-                raw_state.push_back(1);
-                break;
-            default: continue;
+        case 24:
+            raw_rTc.push_back(std::stod(entries[1]));
+            raw_kfp.push_back(std::stod(entries[8]));
+            raw_kfn.push_back(std::stod(entries[9]));
+            raw_Tcn.push_back(std::stod(entries[14]));
+            raw_Tcp.push_back(std::stod(entries[15]));
+            raw_mstn.push_back(std::stod(entries[22]));
+            raw_mstp.push_back(std::stod(entries[23]));
+            raw_state.push_back(0);
+            break;
+        case 15:
+            raw_rTc.push_back(std::stod(entries[1]));
+            raw_kfp.push_back(0);
+            raw_kfn.push_back(std::stod(entries[7]));
+            raw_Tcn.push_back(std::stod(entries[8]));
+            raw_Tcp.push_back(0);
+            raw_mstn.push_back(std::stod(entries[13]));
+            raw_mstp.push_back(std::stod(entries[14]));
+            raw_state.push_back(1);
+            break;
+        default:
+            continue;
         }
     }
 
@@ -89,7 +90,7 @@ bool NSCool::LoadCriticalTemps(std::string path) {
 
 bool NSCool::LoadProfile(std::string path) {
     std::ifstream file;
-    file.open(path+"/Temp_Try.dat");
+    file.open(path + "/Temp_Try.dat");
     if (!file.is_open()) {
         return false;
     }
@@ -108,27 +109,23 @@ bool NSCool::LoadProfile(std::string path) {
         raw_T.push_back(std::stod(entries[5]));
         raw_ephi.push_back(std::stod(entries[3]));
         raw_dvol.push_back(std::stod(entries[4]));
-        size_t last = raw_rT.size() - 1;
-        if (last>0) {
-            double dr = raw_rT[last-1] - raw_rT[last];
-            raw_dvdr.push_back(raw_dvol.back() / dr);
-        } else {
-            raw_dvdr.push_back(0);
-        }
     }
 
     raw_rT.push_back(0);
     raw_T.push_back(raw_T.back());
     raw_ephi.push_back(raw_ephi.back());
     raw_dvol.push_back(raw_dvol.back());
-    raw_dvdr[0] = raw_dvdr[1];
-    raw_dvdr.push_back(raw_dvdr.back());
 
     std::reverse(raw_rT.begin(), raw_rT.end());
     std::reverse(raw_T.begin(), raw_T.end());
     std::reverse(raw_ephi.begin(), raw_ephi.end());
     std::reverse(raw_dvol.begin(), raw_dvol.end());
-    std::reverse(raw_dvdr.begin(), raw_dvdr.end());
+
+    raw_dvdr.resize(raw_rT.size());
+    raw_dvdr[0] = 0;
+    for (size_t i = 1; i < raw_rT.size(); ++i) {
+        raw_dvdr[i] = raw_dvol[i] / (raw_rT[i] - raw_rT[i - 1]);
+    }
 
     return true;
 }
@@ -147,18 +144,19 @@ std::vector<std::string> NSCool::Split(std::string line) {
 }
 
 void NSCool::PrintEosNames() {
-    for (const std::string& str: eos_names) {
+    for (const std::string &str : eos_names) {
         std::cout << str << "\n";
     }
 }
 
 void NSCool::Determine1s03p2Boundary() {
-    size_t i = std::distance(raw_state.begin(),
-                    std::lower_bound(raw_state.begin(), raw_state.end(), 1));
-    boundary_1s03p2 = (raw_rTc[i] + raw_rTc[i-1])/2.;
+    size_t i =
+        std::distance(raw_state.begin(),
+                      std::lower_bound(raw_state.begin(), raw_state.end(), 1));
+    boundary_1s03p2 = (raw_rTc[i] + raw_rTc[i - 1]) / 2.;
 }
 
-void NSCool::DetermineDeltaTInfty(Process* process) {
+void NSCool::DetermineDeltaTInfty(Process *process) {
     raw_DeltaT_infty.clear();
     for (size_t i = 0; i < raw_Tcn.size(); ++i) {
         double r = raw_rTc[i];
@@ -172,11 +170,14 @@ void NSCool::DetermineDeltaTInfty(Process* process) {
 
 std::vector<double> NSCool::GetResonanceLayer(double omega) {
     std::vector<double> res;
-    double target = omega/2.;
+    double target = omega / 2.;
     for (size_t i = 0; i < raw_DeltaT_infty.size() - 1; ++i) {
-        if ((raw_DeltaT_infty[i]-target)*(raw_DeltaT_infty[i+1]-target) <= 0) {
-            std::vector<double> x = {raw_DeltaT_infty[i],raw_DeltaT_infty[i+1]};
-            std::vector<double> y = {raw_rTc[i], raw_rTc[i+1]};
+        if ((raw_DeltaT_infty[i] - target) *
+                (raw_DeltaT_infty[i + 1] - target) <=
+            0) {
+            std::vector<double> x = {raw_DeltaT_infty[i],
+                                     raw_DeltaT_infty[i + 1]};
+            std::vector<double> y = {raw_rTc[i], raw_rTc[i + 1]};
             if (x[0] > x[1]) {
                 std::reverse(x.begin(), x.end());
                 std::reverse(y.begin(), y.end());
@@ -187,11 +188,11 @@ std::vector<double> NSCool::GetResonanceLayer(double omega) {
     return res;
 }
 
-double NSCool::lerp(std::vector<double>& x, std::vector<double>& y, double nx) {
+double NSCool::lerp(std::vector<double> &x, std::vector<double> &y, double nx) {
     std::vector<double>::iterator it = std::upper_bound(x.begin(), x.end(), nx);
-    double t = (*it - nx)/(*it - *(it-1));
+    double t = (*it - nx) / (*it - *(it - 1));
     size_t i = std::distance(x.begin(), it);
-    return std::lerp(y[i], y[i-1], t);
+    return std::lerp(y[i], y[i - 1], t);
 }
 
 void NSCool::WriteRawData(hid_t file_id) {
@@ -215,7 +216,7 @@ double NSCool::GetUnweightedMeanT() {
     for (size_t i = 0; i < raw_rTc.size(); ++i) {
         double T = lerp(raw_rT, raw_T, raw_rTc[i]);
         double ephi = lerp(raw_rT, raw_ephi, raw_rTc[i]);
-        res += T*ephi;
+        res += T * ephi;
     }
     return res / static_cast<double>(raw_rTc.size());
 }

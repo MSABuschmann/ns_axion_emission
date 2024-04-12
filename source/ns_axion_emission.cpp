@@ -23,7 +23,7 @@ int main(int argc, const char *argv[]) {
     double gann = 1e-10;
     double gapp = 1e-10;
     std::vector<double> alpha = {0.5, 1., 1.5};
-    std::vector<double> E = CreateVector(0., 150., 1000);
+    std::vector<double> E = CreateVector(0., 80., 100);
     // std::vector<double> E = {5,10,15};
 
     Pbf_1s0 pbf_1s0n(&nscool, "n", gann);
