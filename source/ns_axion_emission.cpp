@@ -4,6 +4,7 @@
 #include "bremsstrahlung.h"
 #include "nscool.h"
 #include "pbf_1s0.h"
+#include "pbf_3p2.h"
 #include "utils.h"
 
 int main(int argc, const char *argv[]) {
@@ -28,6 +29,8 @@ int main(int argc, const char *argv[]) {
 
     Pbf_1s0 pbf_1s0n(&nscool, "n", gann);
     Pbf_1s0 pbf_1s0p(&nscool, "p", gapp);
+    Pbf_3p2 pbf_3p2A(&nscool, "A", gann);
+    Pbf_3p2 pbf_3p2B(&nscool, "B", gann);
     Bremsstrahlung bremsstrahlung_nn(&nscool, "nn", gann, gann);
     Bremsstrahlung bremsstrahlung_np(&nscool, "np", gann, gapp);
     Bremsstrahlung bremsstrahlung_pp(&nscool, "pp", gapp, gapp);
@@ -55,15 +58,19 @@ int main(int argc, const char *argv[]) {
     for (size_t i = 0; i < alpha.size(); ++i) {
         nscool.SetAlpha(alpha[i]);
         WriteDataset(file_id, "1s0n_a" + std::to_string(i),
-                     pbf_1s0n.GetSpectrum(E));
+                     pbf_1s0n.GetSpectrumGsl(E, 22));
         WriteDataset(file_id, "1s0p_a" + std::to_string(i),
-                     pbf_1s0p.GetSpectrum(E));
+                     pbf_1s0p.GetSpectrumGsl(E, 22));
+        WriteDataset(file_id, "3p2A_a" + std::to_string(i),
+                     pbf_3p2A.GetSpectrumGsl(E, 15));
+        WriteDataset(file_id, "3p2B_a" + std::to_string(i),
+                     pbf_3p2B.GetSpectrumGsl(E, 15));
         WriteDataset(file_id, "bremsstrahlung_nn_a" + std::to_string(i),
-                     bremsstrahlung_nn.GetSpectrum(E));
+                     bremsstrahlung_nn.GetSpectrumGsl(E, 22));
         WriteDataset(file_id, "bremsstrahlung_np_a" + std::to_string(i),
-                     bremsstrahlung_np.GetSpectrum(E));
+                     bremsstrahlung_np.GetSpectrumGsl(E, 22));
         WriteDataset(file_id, "bremsstrahlung_pp_a" + std::to_string(i),
-                     bremsstrahlung_pp.GetSpectrum(E));
+                     bremsstrahlung_pp.GetSpectrumGsl(E, 22));
     }
 
     H5Fclose(file_id);

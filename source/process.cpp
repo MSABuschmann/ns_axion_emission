@@ -21,7 +21,8 @@ double Process::GslIntegrand(double r, void *params) {
     return gsl_params->pthis->Integrand(r, gsl_params->E) / FUDGE;
 }
 
-std::vector<double> Process::GetSpectrum(std::vector<double> &E_bins) {
+std::vector<double> Process::GetSpectrumGsl(std::vector<double> &E_bins,
+                                            int N) {
     std::cout << "Compute spectrum with GSL ..." << std::endl;
     std::chrono::steady_clock::time_point start_time =
         std::chrono::steady_clock::now();
@@ -69,8 +70,7 @@ std::vector<double> Process::GetSpectrum(std::vector<double> &E_bins) {
                               &neval);
 #elif SCHEME == ROMBERG
         size_t neval;
-        gsl_integration_romberg_workspace *w =
-            gsl_integration_romberg_alloc(24);
+        gsl_integration_romberg_workspace *w = gsl_integration_romberg_alloc(N);
         gsl_integration_romberg(&F, rmin, rmax, 0, 1e-3, &spectrum[i], &neval,
                                 w);
 #endif

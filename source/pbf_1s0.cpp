@@ -25,7 +25,7 @@ double Pbf_1s0::Integrand(double r, double E) {
     double omega = E * keV2K / ephi;
     const double I = Ias(T, DeltaT);
     // Internally, everything is consistently in metres and Kelvin, only the
-    // input 'E' is in keV. The 1e-4 * keV2K factor is to convert the final
+    // input 'E' is in keV. The 1e-6 * keV2K factor is to convert the final
     // result from erg/(m^3 K sec) to erg/(cm^3 keV sec).
     return J(omega, T, DeltaT, I) * Epsilon(r, T, I) * dvdr * ephi * ephi *
            1e-6 * keV2K;
@@ -65,6 +65,10 @@ double Pbf_1s0::Epsilon(double r, double T, double I) {
 
 inline double Pbf_1s0::Ias(double T, double DeltaT) {
     double z = DeltaT / T;
+    if (z >= 15 || z <= 0) {
+        return 0;
+    }
+
     // Eq.(22) of A. Sedrakian, Phys. Rev. D93, 065044 (2016), arXiv:1512.07828
     const double a = 0.158151;
     const double c = 0.543166;
@@ -76,7 +80,7 @@ inline double Pbf_1s0::Ias(double T, double DeltaT) {
 
 inline double Pbf_1s0::J(double omega, double T, double DeltaT, double I) {
     double argwt = omega / (2. * DeltaT);
-    if (argwt <= 1) {
+    if (argwt <= 1 || I <= 0) {
         return 0;
     }
     double z = DeltaT / T;
@@ -88,8 +92,6 @@ inline double Pbf_1s0::J(double omega, double T, double DeltaT, double I) {
     return N / (2. * DeltaT) * argwt * argwt * argwt /
            std::sqrt(argwt * argwt - 1) * fermi * fermi;
 }
-
-double Pbf_1s0::Fermi(double x) { return 1. / (std::exp(x) + 1); }
 
 double Pbf_1s0::GetDeltaT(double T, double Tc) {
     const double tau = T / Tc;

@@ -18,7 +18,6 @@ class Pbf_1s0 : public Process {
     double J(double omega, double T, double DeltaT, double I);
     double Epsilon(double r, double T, double I);
     double Ias(double T, double DeltaT);
-    double Fermi(double x);
 
     std::string source;
     double gaNN;

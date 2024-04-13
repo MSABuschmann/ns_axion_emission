@@ -10,18 +10,28 @@ class Pbf_3p2 : public Process {
     using Process::Process;
     virtual double Integrand(double r, double E) override;
     virtual double GetDeltaT(double T, double Tc) override;
-    double GetDeltaT(double T, double Tc, double theta);
+    double GetDeltaT(double T, double Tc, double cos_theta);
 
   protected:
     virtual void GetBoundaries(double *rmin, double *rmax) override;
 
   private:
-    double J(double omega, double T, double DeltaT, double I);
+    static double JTimesEpsilonIntegrand(double r, void *params);
+    double J(double omega, double T, double DeltaT, double I0);
     double Epsilon(double r, double T, double I);
     double Ian(double T, double DeltaT);
 
     std::string source;
     double gann;
+};
+
+struct GslThetaIntegrationParams {
+    Pbf_3p2 *pthis;
+    double r;
+    double omega;
+    double T;
+    double Tc;
+    double I0;
 };
 
 #endif // PBF_3P2__H_

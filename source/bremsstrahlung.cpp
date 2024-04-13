@@ -12,7 +12,7 @@ double Bremsstrahlung::Integrand(double r, double E) {
     const double ephi = nscool->GetEphi(r);
     const double omega = E * keV2K / ephi;
     // Internally, everything is consistently in metres and Kelvin, only the
-    // input 'E' is in keV. The 1e-4 * keV2K factor is to convert the final
+    // input 'E' is in keV. The 1e-6 * keV2K factor is to convert the final
     // result from erg/(m^3 K sec) to erg/(cm^3 keV sec).
     return J(omega, T) * Epsilon(r, T) * dvdr * ephi * ephi * 1e-6 * keV2K;
 }
