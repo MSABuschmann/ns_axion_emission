@@ -8,7 +8,7 @@ class Pbf_3p2 : public Process {
     Pbf_3p2(NSCool *pnscool, std::string nucleon, double this_gann)
         : Process(pnscool), source{nucleon}, gann{this_gann} {};
     using Process::Process;
-    virtual double Integrand(double r, double E) override;
+    virtual double dI_dE_dr(double r, double E) override;
     virtual double GetDeltaT(double T, double Tc) override;
     double GetDeltaT(double T, double Tc, double cos_theta);
 
@@ -16,7 +16,7 @@ class Pbf_3p2 : public Process {
     virtual void GetBoundaries(double *rmin, double *rmax) override;
 
   private:
-    static double JTimesEpsilonIntegrand(double r, void *params);
+    static double dI_dE_dr_dtheta(double r, void *params);
     double J(double omega, double T, double DeltaT, double I0);
     double Epsilon(double r, double T, double I);
     double Ian(double T, double DeltaT);

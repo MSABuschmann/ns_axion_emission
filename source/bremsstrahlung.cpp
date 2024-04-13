@@ -3,7 +3,7 @@
 #include "bremsstrahlung.h"
 #include "utils.h"
 
-double Bremsstrahlung::Integrand(double r, double E) {
+double Bremsstrahlung::dI_dE_dr(double r, double E) {
     if (E <= 0) {
         return 0;
     }

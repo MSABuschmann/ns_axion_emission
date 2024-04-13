@@ -9,7 +9,7 @@ class Pbf_1s0 : public Process {
         : Process(pnscool), source{nucleon}, gaNN{this_gaNN} {};
     using Process::Process;
     virtual double GetDeltaT(double T, double Tc) override;
-    virtual double Integrand(double r, double E) override;
+    virtual double dI_dE_dr(double r, double E) override;
 
   protected:
     virtual void GetBoundaries(double *rmin, double *rmax) override;

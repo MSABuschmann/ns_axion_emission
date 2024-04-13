@@ -4,7 +4,7 @@
 #include "pbf_3p2.h"
 #include "utils.h"
 
-double Pbf_3p2::Integrand(double r, double E) {
+double Pbf_3p2::dI_dE_dr(double r, double E) {
     const double T = nscool->GetT(r);
     const double Tc = nscool->GetTcn(r);
     const double DeltaT0 = GetDeltaT(T, Tc);
@@ -22,7 +22,7 @@ double Pbf_3p2::Integrand(double r, double E) {
     gsl_params.Tc = Tc;
     gsl_params.I0 = I0;
     gsl_function F;
-    F.function = &Pbf_3p2::JTimesEpsilonIntegrand;
+    F.function = &Pbf_3p2::dI_dE_dr_dtheta;
     F.params = &gsl_params;
     size_t neval;
     gsl_integration_romberg_workspace *w = gsl_integration_romberg_alloc(15);
@@ -34,7 +34,7 @@ double Pbf_3p2::Integrand(double r, double E) {
     return JTimesEpsilon * dvdr * ephi * ephi * 1e-6 * keV2K;
 }
 
-double Pbf_3p2::JTimesEpsilonIntegrand(double cos_theta, void *params) {
+double Pbf_3p2::dI_dE_dr_dtheta(double cos_theta, void *params) {
     GslThetaIntegrationParams *gsl_params =
         static_cast<GslThetaIntegrationParams *>(params);
     const double r = gsl_params->r;

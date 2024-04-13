@@ -3,7 +3,7 @@
 #include "pbf_1s0.h"
 #include "utils.h"
 
-double Pbf_1s0::Integrand(double r, double E) {
+double Pbf_1s0::dI_dE_dr(double r, double E) {
     double T = nscool->GetT(r);
     double Tc;
 

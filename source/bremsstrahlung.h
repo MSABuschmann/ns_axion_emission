@@ -15,7 +15,7 @@ class Bremsstrahlung : public Process {
         return T * DeltaT0(T, Tc);
     };
 
-    virtual double Integrand(double r, double E) override;
+    virtual double dI_dE_dr(double r, double E) override;
 
     double DeltaT0(double T, double Tc);
     double Rnn(double T, double Tc);

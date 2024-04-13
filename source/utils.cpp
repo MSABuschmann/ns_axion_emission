@@ -63,7 +63,7 @@ void WriteIntegrand(hid_t file_id, NSCool &nscool) {
     for (size_t i = 0; i < E.size(); ++i) {
         std::vector<double> integrand(N, 0), int_p(N, 0);
         for (size_t j = 0; j < N; ++j) {
-            integrand[j] = pbf_1s0n.Integrand(r[j], E[i]);
+            integrand[j] = pbf_1s0n.dI_dE_dr(r[j], E[i]);
         }
         std::string str = "integrand_n_" + std::to_string(i);
         WriteDataset(file_id, str.c_str(), integrand);
@@ -73,7 +73,7 @@ void WriteIntegrand(hid_t file_id, NSCool &nscool) {
     for (size_t i = 0; i < E.size(); ++i) {
         std::vector<double> integrand(N, 0), int_p(N, 0);
         for (size_t j = 0; j < N; ++j) {
-            integrand[j] = pbf_1s0p.Integrand(r[j], E[i]);
+            integrand[j] = pbf_1s0p.dI_dE_dr(r[j], E[i]);
         }
         std::string str = "integrand_p_" + std::to_string(i);
         WriteDataset(file_id, str.c_str(), integrand);

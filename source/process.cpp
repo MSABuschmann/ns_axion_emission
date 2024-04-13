@@ -15,10 +15,10 @@
 // Rescaling can help numerical stability
 #define FUDGE 1e26
 
-double Process::GslIntegrand(double r, void *params) {
+double Process::Gsl_dI_dE_dr(double r, void *params) {
     GslIntegrationParams *gsl_params =
         static_cast<GslIntegrationParams *>(params);
-    return gsl_params->pthis->Integrand(r, gsl_params->E) / FUDGE;
+    return gsl_params->pthis->dI_dE_dr(r, gsl_params->E) / FUDGE;
 }
 
 std::vector<double> Process::GetSpectrumGsl(std::vector<double> &E_bins,
@@ -39,7 +39,7 @@ std::vector<double> Process::GetSpectrumGsl(std::vector<double> &E_bins,
         gsl_params.pthis = this;
         gsl_params.E = E_bins[i];
         gsl_function F;
-        F.function = &Process::GslIntegrand;
+        F.function = &Process::Gsl_dI_dE_dr;
         F.params = &gsl_params;
 
 #if SCHEME == QAGS
@@ -93,9 +93,10 @@ std::vector<double> Process::GetSpectrum(std::vector<double> &E_bins, int N) {
 #pragma omp parallel for
     for (size_t i = 0; i < E_bins.size(); ++i) {
         for (int j = 0; j < N; ++j) {
-            spectrum[i] += Integrand(r[j], E_bins[i]);
+            spectrum[i] += dI_dE_dr(r[j], E_bins[i]);
         }
     }
+    Normalize(E_bins, spectrum);
     PrintDuration(start_time);
     return spectrum;
 }
