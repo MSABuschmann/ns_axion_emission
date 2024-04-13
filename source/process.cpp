@@ -15,14 +15,13 @@
 // Rescaling can help numerical stability
 #define FUDGE 1e26
 
-double Process::Gsl_dI_dE_dr(double r, void *params) {
+double Process::dI_dE_dr_Gsl(double r, void *params) {
     GslIntegrationParams *gsl_params =
         static_cast<GslIntegrationParams *>(params);
     return gsl_params->pthis->dI_dE_dr(r, gsl_params->E) / FUDGE;
 }
 
-std::vector<double> Process::GetSpectrumGsl(std::vector<double> &E_bins,
-                                            int N) {
+std::vector<double> Process::Get_dI_dE_Gsl(std::vector<double> &E_bins, int N) {
     std::cout << "Compute spectrum with GSL ..." << std::endl;
     std::chrono::steady_clock::time_point start_time =
         std::chrono::steady_clock::now();
@@ -39,7 +38,7 @@ std::vector<double> Process::GetSpectrumGsl(std::vector<double> &E_bins,
         gsl_params.pthis = this;
         gsl_params.E = E_bins[i];
         gsl_function F;
-        F.function = &Process::Gsl_dI_dE_dr;
+        F.function = &Process::dI_dE_dr_Gsl;
         F.params = &gsl_params;
 
 #if SCHEME == QAGS
@@ -82,7 +81,7 @@ std::vector<double> Process::GetSpectrumGsl(std::vector<double> &E_bins,
     return spectrum;
 }
 
-std::vector<double> Process::GetSpectrum(std::vector<double> &E_bins, int N) {
+std::vector<double> Process::Get_dI_dE(std::vector<double> &E_bins, int N) {
     std::cout << "Compute spectrum with N_r = " << N << " ..." << std::endl;
     std::chrono::steady_clock::time_point start_time =
         std::chrono::steady_clock::now();

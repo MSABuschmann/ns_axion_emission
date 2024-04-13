@@ -49,28 +49,28 @@ int main(int argc, const char *argv[]) {
     // *************************************************** Write Tests
     WriteIntegrand(file_id, nscool);
     TestInterpolation(file_id, nscool);
-    WriteDataset(file_id, "1s0n_N100", pbf_1s0n.GetSpectrum(E, 100));
-    WriteDataset(file_id, "1s0n_N1000", pbf_1s0n.GetSpectrum(E, 1000));
-    WriteDataset(file_id, "1s0n_N10000", pbf_1s0n.GetSpectrum(E, 10000));
-    WriteDataset(file_id, "1s0n_N262145", pbf_1s0n.GetSpectrum(E, 262145));
+    WriteDataset(file_id, "1s0n_N100", pbf_1s0n.Get_dI_dE(E, 100));
+    WriteDataset(file_id, "1s0n_N1000", pbf_1s0n.Get_dI_dE(E, 1000));
+    WriteDataset(file_id, "1s0n_N10000", pbf_1s0n.Get_dI_dE(E, 10000));
+    WriteDataset(file_id, "1s0n_N262145", pbf_1s0n.Get_dI_dE(E, 262145));
 
     // *************************************************** Write Spectra
     for (size_t i = 0; i < alpha.size(); ++i) {
         nscool.SetAlpha(alpha[i]);
         WriteDataset(file_id, "1s0n_a" + std::to_string(i),
-                     pbf_1s0n.GetSpectrumGsl(E, 22));
+                     pbf_1s0n.Get_dI_dE_Gsl(E, 22));
         WriteDataset(file_id, "1s0p_a" + std::to_string(i),
-                     pbf_1s0p.GetSpectrumGsl(E, 22));
+                     pbf_1s0p.Get_dI_dE_Gsl(E, 22));
         WriteDataset(file_id, "3p2A_a" + std::to_string(i),
-                     pbf_3p2A.GetSpectrumGsl(E, 15));
+                     pbf_3p2A.Get_dI_dE_Gsl(E, 15));
         WriteDataset(file_id, "3p2B_a" + std::to_string(i),
-                     pbf_3p2B.GetSpectrumGsl(E, 15));
+                     pbf_3p2B.Get_dI_dE_Gsl(E, 15));
         WriteDataset(file_id, "bremsstrahlung_nn_a" + std::to_string(i),
-                     bremsstrahlung_nn.GetSpectrumGsl(E, 22));
+                     bremsstrahlung_nn.Get_dI_dE_Gsl(E, 22));
         WriteDataset(file_id, "bremsstrahlung_np_a" + std::to_string(i),
-                     bremsstrahlung_np.GetSpectrumGsl(E, 22));
+                     bremsstrahlung_np.Get_dI_dE_Gsl(E, 22));
         WriteDataset(file_id, "bremsstrahlung_pp_a" + std::to_string(i),
-                     bremsstrahlung_pp.GetSpectrumGsl(E, 22));
+                     bremsstrahlung_pp.Get_dI_dE_Gsl(E, 22));
     }
 
     H5Fclose(file_id);
