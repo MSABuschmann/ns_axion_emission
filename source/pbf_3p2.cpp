@@ -25,7 +25,7 @@ double Pbf_3p2::Integrand(double r, double E) {
     F.function = &Pbf_3p2::JTimesEpsilonIntegrand;
     F.params = &gsl_params;
     size_t neval;
-    gsl_integration_romberg_workspace *w = gsl_integration_romberg_alloc(10);
+    gsl_integration_romberg_workspace *w = gsl_integration_romberg_alloc(15);
     gsl_integration_romberg(&F, -1, 1, 0, 1e-3, &JTimesEpsilon, &neval, w);
 
     // Internally, everything is consistently in metres and Kelvin, only the
