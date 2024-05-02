@@ -1,5 +1,3 @@
-#include <algorithm>
-#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -35,12 +33,8 @@ bool NSCool::LoadEos(std::string eos) {
         return false;
     }
 
-    Determine1s03p2Boundary();
-
-    std::cout << "3p2: 0m - " << Get1s03p2Boundary() << "m" << std::endl;
-    std::cout << "1s0: " << Get1s03p2Boundary() << "m - " << GetRMax() << "m"
-              << std::endl;
-
+    DetermineBoundaries();
+    PrintBoundaries();
     return true;
 }
 
@@ -68,7 +62,7 @@ bool NSCool::LoadCriticalTemps(std::string path) {
             raw_Tcp.push_back(std::stod(entries[15]));
             raw_mstn.push_back(std::stod(entries[22]));
             raw_mstp.push_back(std::stod(entries[23]));
-            raw_state.push_back(0);
+            raw_state.push_back(GetState(entries[18]));
             break;
         case 15:
             raw_rTc.push_back(std::stod(entries[1]));
@@ -78,7 +72,7 @@ bool NSCool::LoadCriticalTemps(std::string path) {
             raw_Tcp.push_back(0);
             raw_mstn.push_back(std::stod(entries[13]));
             raw_mstp.push_back(std::stod(entries[14]));
-            raw_state.push_back(1);
+            raw_state.push_back(GetState(entries[9]));
             break;
         default:
             continue;
@@ -149,11 +143,17 @@ void NSCool::PrintEosNames() {
     }
 }
 
-void NSCool::Determine1s03p2Boundary() {
-    size_t i =
-        std::distance(raw_state.begin(),
-                      std::lower_bound(raw_state.begin(), raw_state.end(), 1));
-    boundary_1s03p2 = (raw_rTc[i] + raw_rTc[i - 1]) / 2.;
+void NSCool::DetermineBoundaries() {
+    r_max = std::min(raw_rTc.back(), raw_rT.back()) - 1e-10;
+    boundary_3p2 = FindDownwards(raw_state, 1.5);
+    boundary_1s0n_lower = FindUpwards(raw_state, 0.5);
+    boundary_1s0n_upper = FindDownwards(raw_state, 0.5);
+    boundary_1s0p_lower = FindUpwards(raw_Tcp, 2.);
+    boundary_1s0p_upper = FindDownwards(raw_Tcp, 2.);
+    boundary_core_crust = FindDownwards(raw_Tcp, 0.5);
+    if (boundary_3p2 > 0) {
+        boundary_1s0n_lower = boundary_3p2;
+    }
 }
 
 void NSCool::DetermineDeltaTInfty(Process *process) {
@@ -219,4 +219,80 @@ double NSCool::GetUnweightedMeanT() {
         res += T * ephi;
     }
     return res / static_cast<double>(raw_rTc.size());
+}
+
+int NSCool::GetState(std::string state) {
+    if (state == "no") {
+        return 0;
+    } else if (state == "1s0") {
+        return 1;
+    } else if (state == "3p2") {
+        return 2;
+    }
+    return -1;
+}
+
+bool NSCool::GetBoundaries(double *rmin, double *rmax, std::string source) {
+    if (source == "nn") {
+        (*rmin) = 0;
+        (*rmax) = r_max;
+        return true;
+    } else if (source == "np") {
+        (*rmin) = 0;
+        (*rmax) = boundary_core_crust;
+        return true;
+    } else if (source == "pp") {
+        (*rmin) = 0;
+        (*rmax) = boundary_core_crust;
+        return true;
+    } else if (source == "n") {
+        if (boundary_1s0n_upper <= 0) {
+            return false;
+        }
+        (*rmin) = boundary_1s0n_lower;
+        (*rmax) = boundary_1s0n_upper;
+        return true;
+    } else if (source == "p") {
+        if (boundary_1s0p_upper <= 0) {
+            return false;
+        }
+        (*rmin) = boundary_1s0p_lower;
+        (*rmax) = boundary_1s0p_upper;
+        return true;
+    } else if (source == "A") {
+        if (boundary_3p2 <= 0) {
+            return false;
+        }
+        (*rmin) = 0;
+        (*rmax) = boundary_3p2;
+        return true;
+    } else if (source == "B") {
+        if (boundary_3p2 <= 0) {
+            return false;
+        }
+        (*rmin) = 0;
+        (*rmax) = boundary_3p2;
+        return true;
+    }
+    return false;
+}
+
+void NSCool::PrintBoundary(std::string process, std::string source) {
+    double rmin = 0, rmax = 0;
+    std::cout << "Boundary " << process << ": ";
+    if (GetBoundaries(&rmin, &rmax, source)) {
+        std::cout << rmin << " - " << rmax << " metres." << std::endl;
+    } else {
+        std::cout << "N/A." << std::endl;
+    }
+}
+
+void NSCool::PrintBoundaries() {
+    PrintBoundary("Bremsstrahlung nn", "nn");
+    PrintBoundary("Bremsstrahlung np", "np");
+    PrintBoundary("Bremsstrahlung pp", "pp");
+    PrintBoundary("1s0(n)", "n");
+    PrintBoundary("1s0(p)", "p");
+    PrintBoundary("3p2 A", "A");
+    PrintBoundary("3p2 B", "B");
 }

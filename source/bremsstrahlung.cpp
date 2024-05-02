@@ -153,13 +153,3 @@ double Bremsstrahlung::Rnp(double T, double Tc) {
     return 1. / 2.732 *
            (a * std::exp(e) + 1.732 * b * b * b * b * b * b * b * std::exp(f));
 }
-
-inline void Bremsstrahlung::GetBoundaries(double *rmin, double *rmax) {
-    if (source == "n") {
-        (*rmin) = 0;
-        (*rmax) = nscool->GetRMax();
-    } else {
-        (*rmin) = 0;
-        (*rmax) = nscool->Get1s03p2Boundary();
-    }
-}

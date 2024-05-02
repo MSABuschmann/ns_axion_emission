@@ -5,10 +5,9 @@
 
 class Bremsstrahlung : public Process {
   public:
-    Bremsstrahlung(NSCool *pnscool, std::string nucleon, double this_gann,
+    Bremsstrahlung(NSCool *pnscool, std::string this_source, double this_gann,
                    double this_gapp)
-        : Process(pnscool), source{nucleon}, gann{this_gann},
-          gapp{this_gapp} {};
+        : Process(pnscool, this_source), gann{this_gann}, gapp{this_gapp} {};
     using Process::Process;
 
     virtual double GetDeltaT(double T, double Tc) override {
@@ -23,16 +22,12 @@ class Bremsstrahlung : public Process {
     double Rnp(double T, double Tc);
     double Rpp(double T, double Tc);
 
-  protected:
-    virtual void GetBoundaries(double *rmin, double *rmax) override;
-
   private:
     double F(double x);
     double G(double x);
     double J(double omega, double T);
     double Epsilon(double r, double T);
 
-    std::string source;
     double gann, gapp;
 };
 

@@ -21,6 +21,8 @@ int main(int argc, const char *argv[]) {
         nscool.PrintEosNames();
     }
 
+    return false;
+
     double gann = 1e-10;
     double gapp = 1e-10;
     std::vector<double> alpha = {0.5, 1., 1.5};
@@ -39,7 +41,8 @@ int main(int argc, const char *argv[]) {
     std::string filename = "output/" + eos + ".hdf5";
     hid_t file_id =
         H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    std::vector<double> params = {nscool.Get1s03p2Boundary(), nscool.GetRMax(),
+    std::vector<double> params = {nscool.GetCoreCrustBoundary(),
+                                  nscool.GetRMax(),
                                   nscool.GetUnweightedMeanT()};
     WriteDataset(file_id, "E", E);
     WriteDataset(file_id, "alpha", alpha);

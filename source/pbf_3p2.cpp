@@ -147,8 +147,3 @@ double Pbf_3p2::GetDeltaT(double T, double Tc, double cos_theta) {
     }
     return 0;
 }
-
-void Pbf_3p2::GetBoundaries(double *rmin, double *rmax) {
-    (*rmin) = 0;
-    (*rmax) = nscool->Get1s03p2Boundary();
-}

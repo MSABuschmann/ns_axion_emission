@@ -25,9 +25,13 @@ std::vector<double> Process::Get_dI_dE_Gsl(std::vector<double> &E_bins, int N) {
     std::cout << "Compute spectrum with GSL ..." << std::endl;
     std::chrono::steady_clock::time_point start_time =
         std::chrono::steady_clock::now();
-    double rmin = 0, rmax = 0;
-    GetBoundaries(&rmin, &rmax);
+
     std::vector<double> spectrum(E_bins.size(), 0.);
+    double rmin = 0, rmax = 0;
+    if (!nscool->GetBoundaries(&rmin, &rmax, source)) {
+        return spectrum;
+    }
+
 #if SCHEME == QAPG
     nscool->DetermineDeltaTInfty(this);
 #endif
@@ -85,10 +89,14 @@ std::vector<double> Process::Get_dI_dE(std::vector<double> &E_bins, int N) {
     std::cout << "Compute spectrum with N_r = " << N << " ..." << std::endl;
     std::chrono::steady_clock::time_point start_time =
         std::chrono::steady_clock::now();
-    double rmin = 0, rmax = 0;
-    GetBoundaries(&rmin, &rmax);
-    std::vector<double> r = CreateVector(rmin, rmax, N);
+
     std::vector<double> spectrum(E_bins.size(), 0.);
+    double rmin = 0, rmax = 0;
+    if (!nscool->GetBoundaries(&rmin, &rmax, source)) {
+        return spectrum;
+    }
+
+    std::vector<double> r = CreateVector(rmin, rmax, N);
 #pragma omp parallel for
     for (size_t i = 0; i < E_bins.size(); ++i) {
         for (int j = 0; j < N; ++j) {

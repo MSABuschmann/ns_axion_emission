@@ -103,13 +103,3 @@ double Pbf_1s0::GetDeltaT(double T, double Tc) {
     return T * std::sqrt(1. - tau) *
            (1.456 - 0.157 / std::sqrt(tau) + 1.764 / tau);
 }
-
-void Pbf_1s0::GetBoundaries(double *rmin, double *rmax) {
-    if (source == "p") {
-        (*rmin) = 0;
-        (*rmax) = nscool->Get1s03p2Boundary();
-    } else if (source == "n") {
-        (*rmin) = nscool->Get1s03p2Boundary();
-        (*rmax) = nscool->GetRMax();
-    }
-}
